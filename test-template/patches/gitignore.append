@@ -1,0 +1,7 @@
+
+
+# Added by Forge template
+.env
+.vscode/
+dist/
+build/

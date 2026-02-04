@@ -1,0 +1,13 @@
+name: python-uv-basic
+
+commands:
+  - cmd: ["uv", "init"]
+  - cmd: ["git", "init"]
+
+files:
+  copy:
+    - files/
+
+  append:
+    - target: ".gitignore"
+      source: "patches/gitignore.append"
