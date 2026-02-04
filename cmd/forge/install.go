@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -114,12 +115,9 @@ func runInstall(cmd *cobra.Command, args []string) {
 	}
 	
 	fmt.Println("\n✓ Installation complete!")
-	fmt.Println("\nUsage:")
-	fmt.Println("  forge init TEMPLATE           Initialize a project")
-	fmt.Println("  forge test TEMPLATE           Test a template")
-	fmt.Println("  forge new TEMPLATE_NAME       Create a new template")
-	fmt.Println("  forge list                    List templates")
-	fmt.Println("\nImportant: Close and reopen your terminal to use the global 'forge' command")
+	
+	// Setup global templates directory
+	setupGlobalTemplates()
 }
 
 func copyFile(src, dst string) error {
@@ -129,6 +127,87 @@ func copyFile(src, dst string) error {
 	}
 	
 	return os.WriteFile(dst, input, 0755)
+}
+
+func setupGlobalTemplates() error {
+	userProfile := os.Getenv("USERPROFILE")
+	if userProfile == "" {
+		return fmt.Errorf("USERPROFILE environment variable not set")
+	}
+
+	globalTemplatesDir := filepath.Join(userProfile, ".forge", "templates")
+
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("Global Templates Directory Setup")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("\nForge can use a global templates directory for sharing templates")
+	fmt.Println("across all your projects.")
+	fmt.Printf("\nProposed location: %s\n", globalTemplatesDir)
+
+	fmt.Print("\nWould you like to set up a global templates directory? (yes/no): ")
+	var response string
+	fmt.Scanln(&response)
+
+	if response != "yes" && response != "y" {
+		fmt.Println("\n✓ Skipped global templates setup")
+		fmt.Println("\nUsage:")
+		fmt.Println("  forge init TEMPLATE           Initialize a project")
+		fmt.Println("  forge test TEMPLATE           Test a template")
+		fmt.Println("  forge new TEMPLATE_NAME       Create a new template")
+		fmt.Println("  forge list                    List templates")
+		fmt.Println("\nTo enable global templates later, run:")
+		fmt.Printf("  mkdir %s\n", globalTemplatesDir)
+		fmt.Printf("  set FORGE_TEMPLATES=%s\n", globalTemplatesDir)
+		fmt.Println("\nImportant: Close and reopen your terminal to use the global 'forge' command")
+		return nil
+	}
+
+	// Create global templates directory
+	if err := os.MkdirAll(globalTemplatesDir, 0755); err != nil {
+		fmt.Printf("⚠ Warning: Could not create global templates directory: %v\n", err)
+		fmt.Println("You can create it manually later:")
+		fmt.Printf("  mkdir %s\n", globalTemplatesDir)
+		return nil
+	}
+
+	fmt.Printf("✓ Created global templates directory: %s\n", globalTemplatesDir)
+
+	// Set environment variable
+	fmt.Println("\nSetting FORGE_TEMPLATES environment variable...")
+	psCmd := fmt.Sprintf(`
+		[Environment]::SetEnvironmentVariable("FORGE_TEMPLATES", "%s", "User")
+		Write-Host "✓ Set FORGE_TEMPLATES environment variable"
+	`, globalTemplatesDir)
+
+	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("⚠ Warning: Could not automatically set environment variable: %v\n", err)
+		fmt.Println("\nYou can set it manually:")
+		fmt.Println("1. Open: Settings → System → About → Advanced system settings")
+		fmt.Println("2. Click: Environment Variables")
+		fmt.Println("3. Under User variables, click New")
+		fmt.Println("4. Variable name: FORGE_TEMPLATES")
+		fmt.Printf("5. Variable value: %s\n", globalTemplatesDir)
+		fmt.Println("6. Click OK")
+		return nil
+	}
+
+	fmt.Println("\n" + strings.Repeat("-", 60))
+	fmt.Println("Global Templates Setup Complete!")
+	fmt.Println(strings.Repeat("-", 60))
+	fmt.Printf("\nLocation: %s\n", globalTemplatesDir)
+	fmt.Println("\nYou can now:")
+	fmt.Println("  1. Create templates globally: forge new my-template")
+	fmt.Println("  2. Use them across all projects: forge init my-template")
+	fmt.Println("  3. Share templates by copying from this directory")
+	fmt.Println("\nUsage:")
+	fmt.Println("  forge init TEMPLATE           Initialize a project (uses global templates)")
+	fmt.Println("  forge test TEMPLATE           Test a template")
+	fmt.Println("  forge new TEMPLATE_NAME       Create a new template (stored globally)")
+	fmt.Println("  forge list                    List templates")
+	fmt.Println("\nImportant: Close and reopen your terminal to use the global 'forge' command")
+
+	return nil
 }
 
 func addToPath(dir string) error {

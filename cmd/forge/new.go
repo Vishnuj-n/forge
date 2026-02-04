@@ -2,6 +2,8 @@ package forge
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"forge/internal/scaffold"
 
@@ -32,8 +34,11 @@ func init() {
 func runNew(cmd *cobra.Command, args []string) {
 	templateName := args[0]
 
+	// Determine template directory (prefer global over local)
+	templatesDir := determineTemplatesDirForNew()
+
 	// Create template generator
-	gen := scaffold.New("templates")
+	gen := scaffold.New(templatesDir)
 
 	// Validate name
 	if err := scaffold.ValidateName(templateName); err != nil {
@@ -41,6 +46,8 @@ func runNew(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Creating new template: %s\n", templateName)
+	fmt.Printf("Location: %s\n", templatesDir)
+	fmt.Println()
 
 	// Generate template
 	templateDir, err := gen.Generate(templateName)
@@ -51,4 +58,27 @@ func runNew(cmd *cobra.Command, args []string) {
 	// Print success message
 	fmt.Println("")
 	fmt.Println(scaffold.GetNextSteps(templateDir, templateName))
+}
+
+func determineTemplatesDirForNew() string {
+	// Check global templates directory first
+	if forgeTemplates := os.Getenv("FORGE_TEMPLATES"); forgeTemplates != "" {
+		if _, err := os.Stat(forgeTemplates); err == nil {
+			fmt.Println("📁 Using global templates directory")
+			return forgeTemplates
+		}
+	}
+
+	// Check home/.forge/templates
+	if home, err := os.UserHomeDir(); err == nil {
+		globalDir := filepath.Join(home, ".forge", "templates")
+		if _, err := os.Stat(globalDir); err == nil {
+			fmt.Println("📁 Using global templates directory")
+			return globalDir
+		}
+	}
+
+	// Fall back to local ./templates
+	fmt.Println("📁 Using local templates directory")
+	return "templates"
 }
