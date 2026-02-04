@@ -1,0 +1,15 @@
+name: simple-git-project
+
+commands:
+  - cmd: ["git", "init"]
+  - cmd: ["git", "config", "user.name", "Forge User"]
+  - cmd: ["git", "config", "user.email", "forge@example.com"]
+
+files:
+  copy:
+    - files/README.md
+    - files/.gitignore
+
+  append:
+    - target: ".gitignore"
+      source: "patches/gitignore.append"
