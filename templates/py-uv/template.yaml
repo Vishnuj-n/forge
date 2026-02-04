@@ -3,7 +3,6 @@ name: py-uv
 # Commands to execute in order
 # Each command is executed in the temporary workspace
 commands:
-  - cmd: ["git", "init"]
   - cmd: ["uv", "init"]
 
 # File operations
