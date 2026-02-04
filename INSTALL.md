@@ -224,6 +224,6 @@ $env:FORGE_TEMPLATES = [Environment]::GetEnvironmentVariable("FORGE_TEMPLATES", 
 ## Getting Help
 
 - **README:** See [README.md](./README.md) for overview and usage
-- **Template Guide:** See [TEMPLATE-GUIDE.md](./TEMPLATE-GUIDE.md) for creating templates
-- **Architecture:** See [ARCHITECTURE.md](./ARCHITECTURE.md) for technical details
+- **Template Guide:** See [TEMPLATE-GUIDE.md](doc/TEMPLATE-GUIDE.md) for creating templates
+- **Architecture:** See [ARCHITECTURE.md](doc/ARCHITECTURE.md) for technical details
 - **Issues:** [GitHub Issues](https://github.com/Vishnuj-n/forge/issues)

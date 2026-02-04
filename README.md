@@ -206,7 +206,7 @@ files:
       source: patches/.gitignore
 ```
 
-For detailed template documentation, see [TEMPLATE-GUIDE.md](./TEMPLATE-GUIDE.md)
+For detailed template documentation, see [TEMPLATE-GUIDE.md](doc/TEMPLATE-GUIDE.md)
 
 ---
 
@@ -275,8 +275,8 @@ del "$env:USERPROFILE\bin\forge.exe"
 ## 📚 Documentation
 
 - **[INSTALL.md](./INSTALL.md)** - Detailed installation guide
-- **[TEMPLATE-GUIDE.md](./TEMPLATE-GUIDE.md)** - How to create and structure templates
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical design and internals
+- **[TEMPLATE-GUIDE.md](doc/TEMPLATE-GUIDE.md)** - How to create and structure templates
+- **[ARCHITECTURE.md](doc/ARCHITECTURE.md)** - Technical design and internals
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute
 
 ---
