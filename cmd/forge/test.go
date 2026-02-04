@@ -35,6 +35,12 @@ func init() {
 func runTest(cmd *cobra.Command, args []string) {
 	templatePath := args[0]
 	
+	// Resolve template path (handles both full paths and template names)
+	resolvedTemplatePath, err := template.ResolveTemplatePath(templatePath)
+	if err != nil {
+		exitWithError("failed to resolve template", err)
+	}
+	
 	// Load template
 	tmpl, err := template.Load(templatePath)
 	if err != nil {
@@ -67,7 +73,7 @@ func runTest(cmd *cobra.Command, args []string) {
 	// Apply file operations
 	if tmpl.HasFileOps() {
 		fmt.Println("\nApplying file operations:")
-		fops := fileops.New(ws.Path(), templatePath)
+		fops := fileops.New(ws.Path(), resolvedTemplatePath)
 		
 		if err := fops.CopyFiles(tmpl.Files.Copy); err != nil {
 			exitWithError("failed to copy files", err)

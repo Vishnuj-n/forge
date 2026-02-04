@@ -16,4 +16,4 @@ files:
   # The target file must exist (created by commands or copy operations)
   append:
     - target: ".gitignore"
-      source: "patches/.gitignore"
+      source: "patches/gitignore.append"
