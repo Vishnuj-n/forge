@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const Version = "0.1.0"
+
 var rootCmd = &cobra.Command{
 	Use:   "forge",
 	Short: "Forge - A safety-first project bootstrapper",
@@ -15,6 +17,7 @@ var rootCmd = &cobra.Command{
 - Applying template file overlays
 - Applying safe, append-only file patches
 - Committing the final result atomically to a user directory`,
+	Version: Version,
 }
 
 func Execute() error {
