@@ -7,9 +7,9 @@ import (
 
 func TestTemplateLoad(t *testing.T) {
 	tests := []struct {
-		name    string
-		yaml    string
-		wantErr bool
+		name     string
+		yaml     string
+		wantErr  bool
 		wantName string
 	}{
 		{
@@ -23,7 +23,7 @@ files:
   append:
     - target: ".gitignore"
       source: "patches/gitignore.append"`,
-			wantErr: false,
+			wantErr:  false,
 			wantName: "test-template",
 		},
 		{
@@ -44,7 +44,7 @@ commands:
 			yaml: `name: minimal
 commands:
   - cmd: ["echo", "hello"]`,
-			wantErr: false,
+			wantErr:  false,
 			wantName: "minimal",
 		},
 	}

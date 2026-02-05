@@ -11,9 +11,9 @@ import (
 
 // Template represents a project template configuration
 type Template struct {
-	Name     string       `yaml:"name"`
-	Commands []Command    `yaml:"commands"`
-	Files    FileOps      `yaml:"files"`
+	Name     string    `yaml:"name"`
+	Commands []Command `yaml:"commands"`
+	Files    FileOps   `yaml:"files"`
 }
 
 // Command represents a single command to execute
@@ -98,6 +98,22 @@ func getSearchPaths(templateName string) []string {
 	return paths
 }
 
+// Parse parses and validates a template from YAML data
+func Parse(data []byte) (*Template, error) {
+	// Parse YAML
+	var tmpl Template
+	if err := yaml.Unmarshal(data, &tmpl); err != nil {
+		return nil, fmt.Errorf("failed to parse template YAML: %w", err)
+	}
+
+	// Validate
+	if err := tmpl.validate(); err != nil {
+		return nil, fmt.Errorf("template validation failed: %w", err)
+	}
+
+	return &tmpl, nil
+}
+
 // loadFromPath loads a template from a resolved path
 func loadFromPath(resolvedPath string) (*Template, error) {
 	// Check if it's a directory or file
@@ -121,18 +137,7 @@ func loadFromPath(resolvedPath string) (*Template, error) {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
 
-	// Parse YAML
-	var tmpl Template
-	if err := yaml.Unmarshal(data, &tmpl); err != nil {
-		return nil, fmt.Errorf("failed to parse template YAML: %w", err)
-	}
-
-	// Validate
-	if err := tmpl.validate(); err != nil {
-		return nil, fmt.Errorf("template validation failed: %w", err)
-	}
-
-	return &tmpl, nil
+	return Parse(data)
 }
 
 // validate checks if the template is valid
