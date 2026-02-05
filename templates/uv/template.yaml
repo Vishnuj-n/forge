@@ -1,4 +1,4 @@
-name: py-uv
+name: uv
 
 # Commands to execute in order
 # Each command is executed in the temporary workspace
