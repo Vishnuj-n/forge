@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// Compile regex pattern once at package level
+var templateNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 // Generator creates new template scaffolds
 type Generator struct {
 	BaseDir string
@@ -31,7 +34,7 @@ func ValidateName(name string) error {
 	}
 
 	// Allow alphanumeric, hyphens, underscores
-	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name) {
+	if !templateNamePattern.MatchString(name) {
 		return fmt.Errorf("template name can only contain letters, numbers, hyphens, and underscores")
 	}
 
