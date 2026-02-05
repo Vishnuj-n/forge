@@ -38,31 +38,31 @@
 
 ### Required Documentation
 
-- [ ] **README.md**
+- [x] **README.md**
   - **Brief:** Main project documentation covering: project overview, what Forge does, installation instructions, basic usage examples (`forge init`, `forge test`), template structure explanation, and quick start guide
   - **Target Audience:** End users and developers wanting to use Forge
   - **Key Sections:** Overview, Installation, Quick Start, Usage Examples, Template Format, Safety Features
   - **Tone:** Clear, concise, practical
 
-- [ ] **ARCHITECTURE.md**
+- [x] **ARCHITECTURE.md**
   - **Brief:** Technical architecture documentation covering: system design, module breakdown (template, workspace, executor, fileops, commit), execution flow, safety model (two-phase commit, workspace isolation), and design decisions
   - **Target Audience:** Contributors and architects evaluating the codebase
   - **Key Sections:** Overview, Module Architecture, Execution Flow, Safety Model, Design Principles
   - **Tone:** Technical, detailed, architectural
 
-- [ ] **TEMPLATE-GUIDE.md**
+- [x] **TEMPLATE-GUIDE.md**
   - **Brief:** Complete guide for creating templates covering: template.yaml structure, command execution rules, file operations (copy/append), example templates, best practices, and common patterns
   - **Target Audience:** Template authors
   - **Key Sections:** Template Structure, Command Syntax, File Operations, Complete Examples, Best Practices, Troubleshooting
   - **Tone:** Tutorial-style, practical examples
 
-- [ ] **CONTRIBUTING.md**
+- [x] **CONTRIBUTING.md**
   - **Brief:** Contribution guidelines covering: development setup, code structure, testing requirements, pull request process, coding standards, and how to add new features
   - **Target Audience:** Contributors
   - **Key Sections:** Getting Started, Development Workflow, Testing, Code Standards, PR Guidelines
   - **Tone:** Welcoming, clear instructions
 
-- [ ] **CHANGELOG.md**
+- [x] **CHANGELOG.md**
   - **Brief:** Version history and changes. Start with v0.1.0 (initial release) covering: core features implemented (init/test commands, template system, workspace isolation, two-phase commit), and note that this is the initial implementation based on the design plan
   - **Target Audience:** Users tracking versions
   - **Format:** Standard keepachangelog.com format
@@ -120,7 +120,7 @@ Each document is considered complete when it:
 
 ### CLI Command for Template Generation
 
-- [ ] **forge new <template-name>**
+- [x] **forge new <template-name>**
   - **Purpose:** Generate a new template directory structure with all necessary files
   - **Behavior:** 
     - Creates `templates/<template-name>/` directory
@@ -186,7 +186,7 @@ files:
 
 ---
 
-**Status:** Agent 2 should create documentation files + implement forge new command
+**Status:** Documentation complete. `forge new` command implemented.
 
 ---
 
