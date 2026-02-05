@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"forge/internal/template"
 )
@@ -85,15 +86,10 @@ func isLikelyInteractiveError(stderr string) bool {
 	
 	stderrLower := stderr
 	for _, indicator := range indicators {
-		if len(stderrLower) > 0 && contains(stderrLower, indicator) {
+		if len(stderrLower) > 0 && strings.Contains(stderrLower, indicator) {
 			return true
 		}
 	}
 	
 	return false
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && 
-		([]byte(s)[0] == []byte(substr)[0] || []byte(s)[len(s)-len(substr)] == []byte(substr)[0]))
 }
