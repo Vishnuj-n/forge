@@ -1,10 +1,6 @@
-name: simple-git-project
-
+name: git
 commands:
   - cmd: ["git", "init"]
-  - cmd: ["git", "config", "user.name", "Forge User"]
-  - cmd: ["git", "config", "user.email", "forge@example.com"]
-
 files:
   copy:
     - files/README.md

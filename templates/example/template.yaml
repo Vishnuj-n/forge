@@ -4,7 +4,7 @@
 # This is a template for creating new projects.
 # Edit the commands and files sections below to customize.
 
-name: my-first-template
+name: example
 
 # Commands to execute in order
 # Each command is executed in the temporary workspace
