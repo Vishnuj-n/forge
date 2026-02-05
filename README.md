@@ -1,13 +1,42 @@
+
+
 # Forge - Windows Project Bootstrapper CLI
 
+## Index
+
+1. [Features](#features)
+2. [Quick Start](#quick-start-2-minutes)
+3. [Installation](#installation-methods)
+4. [Template Locations & Usage](#template-locations)
+5. [Usage Examples](#usage-examples)
+6. [Template Structure](#template-structure)
+7. [Configuration](#configuration)
+8. [Uninstall](#uninstall)
+9. [Troubleshooting](#troubleshooting)
+10. [Documentation](#documentation)
+11. [Common Workflows](#common-workflows)
+12. [Safety Features](#safety-features)
+13. [License](#license)
+14. [Contributing](#contributing)
+15. [Support](#support)
+16. [Roadmap](#roadmap)
+
+---
+
+
 Forge is a powerful Windows CLI tool that automates project initialization using templates. Create, share, and reuse project templates with zero dependencies.
+
+**Looking for ready-made templates?**
+
+👉 [Forge Templates Repository](https://github.com/Vishnuj-n/forge-templates)
+
 
 ## ✨ Features
 
 - 📦 **Template-based project generation** - Define projects in simple YAML
 - 🔄 **Reusable templates** - Share templates across projects and teams
 - 🎯 **Safe execution** - Isolated workspace with two-phase commit
-- 📁 **Global templates** - Store templates once, use everywhere
+- 📁 **Global & local templates** - Use templates from global, environment, or project-local directories
 - ⚡ **No dependencies** - Pure Go binary, runs anywhere on Windows
 - 🛡️ **Non-destructive** - Fails safely if anything goes wrong
 
@@ -15,12 +44,12 @@ Forge is a powerful Windows CLI tool that automates project initialization using
 
 ### 1. Install Forge
 
-**Option A: Download Release (Easiest)**
+**Option A: Download Release (Recommended)**
 ```powershell
 # Download forge.exe from GitHub Releases
 # https://github.com/Vishnuj-n/forge/releases
 
-# Run installer
+# Run installer (Go binary)
 .\forge.exe install
 
 # Close and reopen PowerShell
@@ -34,14 +63,12 @@ go build -o forge.exe
 .\forge.exe install
 ```
 
-### 2. Set Up Global Templates (Optional but Recommended)
-```powershell
-# During installation, you'll be asked:
-# "Would you like to set up a global templates directory? (yes/no)"
+### 2. Template Locations
 
-# Answer: yes
-# This creates: C:\Users\YourName\.forge\templates
-```
+Forge looks for templates in this order:
+1. `./templates` (project-local, highest priority)
+2. `$FORGE_TEMPLATES` (if set)
+3. `~/.forge/templates` (global)
 
 ### 3. Use Forge
 
@@ -50,13 +77,13 @@ go build -o forge.exe
 forge list
 
 # Create a new project from a template
-forge init my-template ./my-new-project
+forge init example ./my-new-project
 
 # Create your own template
 forge new my-awesome-template
 
 # Test a template without committing
-forge test my-template
+forge test example
 ```
 
 ---
@@ -123,11 +150,12 @@ Copy-Item .\forge.exe "$env:USERPROFILE\bin\"
 
 ## 🎓 Usage Examples
 
+
 ### Example 1: Create a Project from Template
 
 ```powershell
 # Initialize a new project with git
-forge init simple-git-project ./my-project
+forge init example ./my-project
 
 # Now you have a git-initialized project!
 cd my-project
@@ -141,7 +169,8 @@ git log
 forge new my-web-template
 
 # The template directory is created at:
-# C:\Users\YourName\.forge\templates\my-web-template\
+# - .\templates\my-web-template\ (if run in a project-local templates dir)
+# - C:\Users\YourName\.forge\templates\my-web-template\ (if global)
 
 # Edit the template files:
 # - template.yaml      (configuration)
@@ -154,7 +183,7 @@ forge new my-web-template
 
 ```powershell
 # Test a template without creating the project
-forge test my-web-template
+forge test example
 
 # Inspect the test workspace, then delete it
 # Useful for validating templates before sharing
@@ -167,43 +196,42 @@ forge test my-web-template
 forge list
 
 # Output:
-# Templates in: C:\Users\YourName\.forge\templates
+# Templates in: .\templates
 # 
-# NAME                 COMMANDS  FILE OPS  PATH
-# simple-git-project   2         1         C:\Users\YourName\.forge\templates\simple-git-project
-# my-web-template      3         2         C:\Users\YourName\.forge\templates\my-web-template
+# NAME         COMMANDS  FILE OPS  PATH
+# example      1         1         .\templates\example
+# ...
 ```
 
 ---
 
 ## 📋 Template Structure
 
-Templates are stored in `~/.forge/templates/template-name/`:
+
+Templates are stored in `./templates/template-name/` (project-local) or `~/.forge/templates/template-name/` (global):
 
 ```
-my-template/
+example/
 ├── template.yaml          # Template configuration
 ├── README.md             # Template documentation
 ├── files/                # Files to copy into project
-│   └── src/
-│       └── example.txt
+│   └── README.md
 └── patches/              # Files to append to existing files
-    └── .gitignore
+    └── gitignore.append
 ```
 
 ### template.yaml Example
 
 ```yaml
-name: my-template
+name: example
 commands:
-  - git init
-  - npm init -y
+  - cmd: ["git", "init"]
 files:
   copy:
-    - files/src
+    - files/README.md
   append:
     - target: .gitignore
-      source: patches/.gitignore
+      source: patches/gitignore.append
 ```
 
 For detailed template documentation, see [TEMPLATE-GUIDE.md](doc/TEMPLATE-GUIDE.md)
@@ -214,10 +242,6 @@ For detailed template documentation, see [TEMPLATE-GUIDE.md](doc/TEMPLATE-GUIDE.
 
 ### Global Templates Directory
 
-Forge looks for templates in this order:
-1. `$FORGE_TEMPLATES` environment variable
-2. `~/.forge/templates` (default global location)
-3. `./templates` (project-local templates)
 
 **Set custom location:**
 ```powershell
@@ -228,14 +252,13 @@ Forge looks for templates in this order:
 
 ## 🔄 Uninstall
 
+
 ```powershell
 # Remove from PATH and clean up
 forge uninstall
 
-# You'll see:
-# "Please delete C:\Users\YourName\bin\forge.exe manually"
-
-# Delete it:
+# The Go-based uninstall will attempt to self-delete the executable on Windows.
+# If you see a message to delete manually, run:
 del "$env:USERPROFILE\bin\forge.exe"
 
 # Reopen PowerShell
@@ -245,9 +268,11 @@ del "$env:USERPROFILE\bin\forge.exe"
 
 ## 🔍 Troubleshooting
 
+
 ### "forge: command not found"
 - **Solution:** Close and reopen PowerShell completely (not just a new tab)
 - Check PATH: `$env:Path -split ";" | Select-String "bin"`
+- If both `forge.ps1` and `forge.exe` exist, PowerShell will run the `.ps1` script by default. Use `./forge.exe` to run the Go binary explicitly.
 
 ### "Permission denied" on install
 - **Solution:** The installer doesn't need admin for user install. If you get an error:
@@ -267,7 +292,7 @@ del "$env:USERPROFILE\bin\forge.exe"
 ### Template won't initialize
 - **Solution:** Test first to see detailed errors:
   ```powershell
-  forge test my-template
+  forge test example
   ```
 
 ---
