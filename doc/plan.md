@@ -1,60 +1,15 @@
-Below is the **updated, complete A–Z project plan for Forge**, revised to explicitly incorporate **controlled interactivity**, **Windows atomicity limits**, and **clear scope positioning**—while preserving the original safety-first philosophy.
+Short Project Plan
 
-This version is suitable for **expert review, architectural critique, or external validation**.
+Purpose: Transaction-safe project bootstrapping for Windows.
 
-No code is included.
+Principles:
+- Safety: operate in temp workspace; commit atomically
+- Determinism: declarative templates, explicit behavior
+- Minimal scope: Windows-only V1, no plugins
 
----
+Non-goals (short): not a package manager, not cross-platform, no automatic interactivity
 
-# Project Plan: **Forge** (Revised)
-
-## 1. Project Overview
-
-**Forge** is a **Windows-only CLI tool** that bootstraps new projects by:
-
-* Running ecosystem-native initialization commands (e.g., `uv init`, `npm init`)
-* Applying template file overlays
-* Applying safe, append-only file patches
-* Committing the final result atomically (when possible) to a user directory
-
-Forge **complements existing tooling** instead of replacing it.
-
----
-
-## 2. Problem Statement
-
-Modern ecosystems already provide capable project initializers, but:
-
-* Their outputs are hard to compose
-* They lack transactional safety
-* They do not support layered customization
-* Failures often leave partially created projects
-
-Forge provides a **transactional orchestration layer** around these tools.
-
----
-
-## 3. Core Design Principles
-
-1. **Safety by design**
-2. **Deterministic execution**
-3. **Explicit behavior (no inference)**
-4. **Low cognitive load by default**
-5. **Strict scope discipline (V1)**
-
----
-
-## 4. Non-Goals (V1)
-
-Forge V1 will **not**:
-
-* Replace package managers
-* Resolve dependencies
-* Be cross-platform
-* Execute shell strings
-* Merge or rewrite structured files
-* Provide interactive behavior by default
-* Support plugins or extensions
+Roadmap (high-level): template pulling, testing tools, user installation flow, documentation
 
 ---
 

@@ -1,63 +1,14 @@
-# Documentation Workflow
+# Documentation Overview (Short)
 
-## Agent Roles & Responsibilities
+Key docs:
 
----
+- `README.md` — Project overview, quick start, basic usage
+- `INSTALL.md` — Install & uninstall steps (user + developer)
+- `TEMPLATE-GUIDE.md` — How to author templates (short, direct)
+- `ARCHITECTURE.md` — Full technical reference (kept detailed)
+- `CONTRIBUTING.md` — How to contribute
 
-### 🎯 Agent 1: Documentation Planner (Current)
-
-**Role:** Creates specifications and requirements for all documentation
-
-**Responsibilities:**
-- Define what documentation is needed
-- Specify content requirements for each doc
-- Create and maintain this checklist
-- Review completed docs (optional)
-
-**Process:**
-1. Analyze project structure and purpose
-2. List required documentation below
-3. Add checkboxes for tracking
-4. Provide brief/summary for each item
-
----
-
-### ✍️ Agent 2: Documentation Writer
-
-**Role:** Creates the actual documentation files
-
-**Responsibilities:**
-- Read the briefs below
-- Write comprehensive documentation
-- Check off items when complete
-- Ensure consistency and quality
-
----
-
-## 📋 Documentation Checklist
-
-### Required Documentation
-
-- [x] **README.md**
-  - **Brief:** Main project documentation covering: project overview, what Forge does, installation instructions, basic usage examples (`forge init`, `forge test`), template structure explanation, and quick start guide
-  - **Target Audience:** End users and developers wanting to use Forge
-  - **Key Sections:** Overview, Installation, Quick Start, Usage Examples, Template Format, Safety Features
-  - **Tone:** Clear, concise, practical
-
-- [x] **ARCHITECTURE.md**
-  - **Brief:** Technical architecture documentation covering: system design, module breakdown (template, workspace, executor, fileops, commit), execution flow, safety model (two-phase commit, workspace isolation), and design decisions
-  - **Target Audience:** Contributors and architects evaluating the codebase
-  - **Key Sections:** Overview, Module Architecture, Execution Flow, Safety Model, Design Principles
-  - **Tone:** Technical, detailed, architectural
-
-- [x] **TEMPLATE-GUIDE.md**
-  - **Brief:** Complete guide for creating templates covering: template.yaml structure, command execution rules, file operations (copy/append), example templates, best practices, and common patterns
-  - **Target Audience:** Template authors
-  - **Key Sections:** Template Structure, Command Syntax, File Operations, Complete Examples, Best Practices, Troubleshooting
-  - **Tone:** Tutorial-style, practical examples
-
-- [x] **CONTRIBUTING.md**
-  - **Brief:** Contribution guidelines covering: development setup, code structure, testing requirements, pull request process, coding standards, and how to add new features
+Keep docs concise and actionable; link to the detailed architecture doc for design decisions.
   - **Target Audience:** Contributors
   - **Key Sections:** Getting Started, Development Workflow, Testing, Code Standards, PR Guidelines
   - **Tone:** Welcoming, clear instructions

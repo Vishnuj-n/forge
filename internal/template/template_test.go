@@ -7,13 +7,33 @@ import (
 
 func TestTemplateLoad(t *testing.T) {
 	tests := []struct {
-		name    string
-		yaml    string
-		wantErr bool
+		name     string
+		yaml     string
+		wantErr  bool
 		wantName string
+		wantDesc string
+		wantVer  string
 	}{
 		{
-			name: "valid template",
+			name: "valid template with metadata",
+			yaml: `name: test-template
+description: "A test template"
+version: "1.0.0"
+commands:
+  - cmd: ["git", "init"]
+files:
+  copy:
+    - files/
+  append:
+    - target: ".gitignore"
+      source: "patches/gitignore.append"`,
+			wantErr:  false,
+			wantName: "test-template",
+			wantDesc: "A test template",
+			wantVer:  "1.0.0",
+		},
+		{
+			name: "valid template without metadata",
 			yaml: `name: test-template
 commands:
   - cmd: ["git", "init"]
@@ -23,7 +43,7 @@ files:
   append:
     - target: ".gitignore"
       source: "patches/gitignore.append"`,
-			wantErr: false,
+			wantErr:  false,
 			wantName: "test-template",
 		},
 		{
@@ -44,7 +64,7 @@ commands:
 			yaml: `name: minimal
 commands:
   - cmd: ["echo", "hello"]`,
-			wantErr: false,
+			wantErr:  false,
 			wantName: "minimal",
 		},
 	}
@@ -70,8 +90,16 @@ commands:
 				return
 			}
 
-			if !tt.wantErr && tmpl.Name != tt.wantName {
-				t.Errorf("Load() got name %q, want %q", tmpl.Name, tt.wantName)
+			if !tt.wantErr {
+				if tmpl.Name != tt.wantName {
+					t.Errorf("Load() got name %q, want %q", tmpl.Name, tt.wantName)
+				}
+				if tt.wantDesc != "" && tmpl.Description != tt.wantDesc {
+					t.Errorf("Load() got description %q, want %q", tmpl.Description, tt.wantDesc)
+				}
+				if tt.wantVer != "" && tmpl.Version != tt.wantVer {
+					t.Errorf("Load() got version %q, want %q", tmpl.Version, tt.wantVer)
+				}
 			}
 		})
 	}

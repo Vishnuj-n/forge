@@ -1,60 +1,14 @@
-# AI-FRIENDLY PROJECT CONTEXT — FORGE (PASTE VERBATIM)
+# Forge — Short Context
 
-**READ THIS CAREFULLY AND FOLLOW IT STRICTLY.**
+Forge is a Windows-only CLI tool that bootstraps projects from declarative templates.
 
-You are assisting with **Forge**, a **Windows-only CLI developer tool** written in Go.
+Key points:
+- Runs template commands inside a temporary workspace (safe, isolated)
+- Uses a two-phase commit: prepare in temp, then commit to target only on success
+- Non-interactive by default; enable interactive commands with `--interactive`
+- Templates are YAML; authors declare all test behavior (no guessing)
 
----
-
-## What Forge Is
-
-Forge is a **workflow-aware project bootstrapper**.
-
-It:
-
-* Runs ecosystem-native initialization commands (e.g. `uv init`, `npm init`)
-* Executes everything inside an **OS-provided temporary workspace**
-* Applies template file overlays
-* Applies **append-only** file patches
-* Commits the final result to the user directory **only at the end**
-
-Forge **orchestrates existing tools**.
-It does **not** replace them.
-
----
-
-## Core Safety Model (NON-NEGOTIABLE)
-
-* All commands and file operations run in a **temporary directory**
-* User project directory is untouched until commit
-* No partial writes
-* No silent behavior
-* Failure aborts safely
-
-This is a **transactional execution model**.
-
----
-
-## Interactivity Rules (UPDATED)
-
-* Forge is **non-interactive by default**
-* Child process `stdin` is closed unless explicitly enabled
-* Interactive tools fail fast with a clear error message
-
-Interactive mode is enabled **only by the user** via:
-
-```
---interactive
-```
-
-When enabled:
-
-* stdin/stdout/stderr are forwarded
-* User may respond to prompts
-* Execution still occurs in temp workspace
-* Commit semantics remain unchanged
-
-Templates must **never force interactivity**.
+Keep templates small, documented, and testable.
 
 ---
 
