@@ -11,14 +11,16 @@ import (
 
 // Template represents a project template configuration
 type Template struct {
-	Name     string       `yaml:"name"`
-	Commands []Command    `yaml:"commands"`
-	Files    FileOps      `yaml:"files"`
+	Name     string    `yaml:"name"`
+	Commands []Command `yaml:"commands"`
+	Files    FileOps   `yaml:"files"`
 }
 
 // Command represents a single command to execute
 type Command struct {
-	Cmd []string `yaml:"cmd"`
+	Cmd         []string `yaml:"cmd"`
+	Interactive bool     `yaml:"interactive"`
+	TestCmd     []string `yaml:"test_cmd"`
 }
 
 // FileOps represents file operations (copy and append)

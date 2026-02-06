@@ -1,4 +1,53 @@
+
 # Installation Guide
+## Downloading Templates from the Official Repository
+
+Forge now supports downloading and updating templates directly from the official Forge templates repository using the `forge pull` command.
+
+### Download a Single Template
+
+```powershell
+forge pull <template-name>
+# Example:
+forge pull git
+```
+
+### Download All Templates
+
+```powershell
+forge pull --all
+```
+
+**Behavior:**
+- Templates are downloaded from: https://github.com/Vishnuj-n/forge-templates
+- Templates are installed to `%USERPROFILE%\.forge\templates`.
+- If a template already exists, it is replaced (no duplicates).
+- After pulling, templates are available for `forge init` and `forge list`.
+
+**Example Output:**
+```
+Downloading templates...
+Installing template 'git'...
+Template 'git' installed successfully.
+```
+
+```
+Downloading templates...
+Installing all templates...
+✓ git
+✓ starter
+✓ uv
+Completed. 3 templates installed or updated.
+```
+
+If a template does not exist in the repository:
+```
+Downloading templates...
+Installing template 'django'...
+Error: template not found in archive
+```
+
+---
 
 ## Quick Install
 

@@ -16,7 +16,7 @@ func TestExecutorRun(t *testing.T) {
 	defer os.RemoveAll(wsDir)
 
 	// Initialize git repo in workspace first
-	exec := New(wsDir, false)
+	exec := New(wsDir, false, false)
 	initCmd := template.Command{Cmd: []string{"git", "init"}}
 	if err := exec.Run(initCmd); err != nil {
 		t.Fatalf("git init error = %v", err)
@@ -37,7 +37,7 @@ func TestExecutorRunFailure(t *testing.T) {
 	}
 	defer os.RemoveAll(wsDir)
 
-	exec := New(wsDir, false)
+	exec := New(wsDir, false, false)
 
 	// Test command that should fail
 	cmd := template.Command{Cmd: []string{"nonexistent-command-12345"}}
@@ -53,7 +53,7 @@ func TestExecutorRunEmptyCommand(t *testing.T) {
 	}
 	defer os.RemoveAll(wsDir)
 
-	exec := New(wsDir, false)
+	exec := New(wsDir, false, false)
 
 	// Test empty command
 	cmd := template.Command{Cmd: []string{}}

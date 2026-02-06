@@ -43,6 +43,21 @@ files:
       source: "patches/.gitignore.append"
 ```
 
+### Command Fields
+
+Each command can have these fields:
+
+- `cmd` (required): The command to run, as an array of strings
+- `interactive` (optional): Set to `true` if the command prompts for user input
+- `test_cmd` (optional): Alternative command to run during `forge test` (if `interactive: true`)
+
+```yaml
+commands:
+  - cmd: ["npm", "init"]
+    interactive: true
+    test_cmd: ["npm", "init", "-y"]
+```
+
 ---
 
 ## 🚀 Commands

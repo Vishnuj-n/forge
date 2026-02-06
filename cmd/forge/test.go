@@ -34,34 +34,34 @@ func init() {
 
 func runTest(cmd *cobra.Command, args []string) {
 	templatePath := args[0]
-	
+
 	// Resolve template path (handles both full paths and template names)
 	resolvedTemplatePath, err := template.ResolveTemplatePath(templatePath)
 	if err != nil {
 		exitWithError("failed to resolve template", err)
 	}
-	
+
 	// Load template
 	tmpl, err := template.Load(templatePath)
 	if err != nil {
 		exitWithError("failed to load template", err)
 	}
-	
+
 	fmt.Printf("Testing template: %s\n", tmpl.Name)
-	
+
 	// Create workspace
 	ws, err := workspace.New()
 	if err != nil {
 		exitWithError("failed to create workspace", err)
 	}
 	// Note: We don't defer cleanup here - we want to keep it for inspection
-	
+
 	fmt.Printf("Working in temporary workspace: %s\n", ws.Path())
-	
+
 	// Execute commands
 	if len(tmpl.Commands) > 0 {
 		fmt.Println("\nExecuting commands:")
-		exec := executor.New(ws.Path(), interactiveFlag)
+		exec := executor.New(ws.Path(), interactiveFlag, true)
 		for i, cmdDef := range tmpl.Commands {
 			fmt.Printf("  [%d/%d] %s\n", i+1, len(tmpl.Commands), cmdDef.String())
 			if err := exec.Run(cmdDef); err != nil {
@@ -69,21 +69,21 @@ func runTest(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	// Apply file operations
 	if tmpl.HasFileOps() {
 		fmt.Println("\nApplying file operations:")
 		fops := fileops.New(ws.Path(), resolvedTemplatePath)
-		
+
 		if err := fops.CopyFiles(tmpl.Files.Copy); err != nil {
 			exitWithError("failed to copy files", err)
 		}
-		
+
 		if err := fops.ApplyAppends(tmpl.Files.Append); err != nil {
 			exitWithError("failed to apply patches", err)
 		}
 	}
-	
+
 	fmt.Println("\n✓ Template test completed successfully")
 	fmt.Printf("\nWorkspace location: %s\n", ws.Path())
 	fmt.Println("(Workspace will persist for inspection - delete manually when done)")
