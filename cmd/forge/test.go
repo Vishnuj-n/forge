@@ -16,11 +16,12 @@ var testCmd = &cobra.Command{
 	Short: "Test a template without committing",
 	Long: `Test a template by running the full workflow in a temporary workspace:
 1. Creating an isolated temporary workspace
-2. Running commands declared in the template
+2. Running commands declared in the template (non-interactive)
 3. Copying template files
 4. Applying append-only patches
 5. Displaying the workspace path for inspection
 
+Commands marked as interactive will use test_cmd or be skipped.
 The workspace is NOT committed to any target directory.
 The workspace path is displayed so you can inspect the result.`,
 	Args: cobra.ExactArgs(1),
@@ -28,7 +29,6 @@ The workspace path is displayed so you can inspect the result.`,
 }
 
 func init() {
-	testCmd.Flags().BoolVarP(&interactiveFlag, "interactive", "i", false, "Enable interactive mode for commands that require user input")
 	rootCmd.AddCommand(testCmd)
 }
 
@@ -61,7 +61,7 @@ func runTest(cmd *cobra.Command, args []string) {
 	// Execute commands
 	if len(tmpl.Commands) > 0 {
 		fmt.Println("\nExecuting commands:")
-		exec := executor.New(ws.Path(), interactiveFlag, true)
+		exec := executor.New(ws.Path(), false, true) // true for testMode
 		for i, cmdDef := range tmpl.Commands {
 			fmt.Printf("  [%d/%d] %s\n", i+1, len(tmpl.Commands), cmdDef.String())
 			if err := exec.Run(cmdDef); err != nil {

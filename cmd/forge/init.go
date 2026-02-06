@@ -5,28 +5,23 @@ import (
 	"os"
 	"path/filepath"
 
-	"forge/internal/commit"
 	"forge/internal/executor"
 	"forge/internal/fileops"
 	"forge/internal/template"
-	"forge/internal/workspace"
 
 	"github.com/spf13/cobra"
-)
-
-var (
-	interactiveFlag bool
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init <template-path> [target-directory]",
 	Short: "Initialize a new project from a template",
 	Long: `Initialize a new project by:
-1. Creating an isolated temporary workspace
-2. Running commands declared in the template
-3. Copying template files
-4. Applying append-only patches
-5. Committing the result to the target directory
+1. Running commands directly in the target directory
+2. Copying template files
+3. Applying append-only patches
+
+Commands inherit your terminal's stdin/stdout/stderr, so interactive
+commands (like npm init, cargo init) work naturally.
 
 Target directory defaults to current working directory if not specified.`,
 	Args: cobra.RangeArgs(1, 2),
@@ -34,7 +29,6 @@ Target directory defaults to current working directory if not specified.`,
 }
 
 func init() {
-	initCmd.Flags().BoolVarP(&interactiveFlag, "interactive", "i", false, "Enable interactive mode for commands that require user input")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -72,19 +66,17 @@ func runInit(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Initializing project from template: %s\n", tmpl.Name)
 
-	// Create workspace
-	ws, err := workspace.New()
-	if err != nil {
-		exitWithError("failed to create workspace", err)
+	// Create target directory if it doesn't exist
+	if err := os.MkdirAll(absTargetDir, 0755); err != nil {
+		exitWithError("failed to create target directory", err)
 	}
-	defer ws.Cleanup()
 
-	fmt.Printf("Working in temporary workspace: %s\n", ws.Path())
+	fmt.Printf("Working in target directory: %s\n", absTargetDir)
 
-	// Execute commands
+	// Execute commands directly in target directory
 	if len(tmpl.Commands) > 0 {
 		fmt.Println("\nExecuting commands:")
-		exec := executor.New(ws.Path(), interactiveFlag, false)
+		exec := executor.New(absTargetDir, false, false) // false for testMode = forge init mode
 		for i, cmdDef := range tmpl.Commands {
 			fmt.Printf("  [%d/%d] %s\n", i+1, len(tmpl.Commands), cmdDef.String())
 			if err := exec.Run(cmdDef); err != nil {
@@ -93,10 +85,10 @@ func runInit(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Apply file operations
+	// Apply file operations directly in target directory
 	if tmpl.HasFileOps() {
 		fmt.Println("\nApplying file operations:")
-		fops := fileops.New(ws.Path(), resolvedTemplatePath)
+		fops := fileops.New(absTargetDir, resolvedTemplatePath)
 
 		if err := fops.CopyFiles(tmpl.Files.Copy); err != nil {
 			exitWithError("failed to copy files", err)
@@ -105,13 +97,6 @@ func runInit(cmd *cobra.Command, args []string) {
 		if err := fops.ApplyAppends(tmpl.Files.Append); err != nil {
 			exitWithError("failed to apply patches", err)
 		}
-	}
-
-	// Commit to target directory
-	fmt.Printf("\nCommitting to target directory: %s\n", absTargetDir)
-	committer := commit.New()
-	if err := committer.Commit(ws.Path(), absTargetDir); err != nil {
-		exitWithError("failed to commit project", err)
 	}
 
 	fmt.Printf("\n✓ Project initialized successfully at: %s\n", absTargetDir)

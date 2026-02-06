@@ -31,7 +31,7 @@ func init() {
 
 func runInstall(cmd *cobra.Command, args []string) {
 	var installDir, exePath string
-	
+
 	if systemInstall {
 		// System-wide installation
 		installDir = filepath.Join("C:", string(filepath.Separator), "Program Files", "Forge")
@@ -45,13 +45,13 @@ func runInstall(cmd *cobra.Command, args []string) {
 		installDir = filepath.Join(userProfile, "bin")
 		exePath = filepath.Join(installDir, "forge.exe")
 	}
-	
+
 	// Get current executable path
 	currentExe, err := os.Executable()
 	if err != nil {
 		exitWithError("failed to get current executable path", err)
 	}
-	
+
 	fmt.Println("Installing Forge...")
 	fmt.Printf("Source: %s\n", currentExe)
 	fmt.Printf("Target: %s\n", exePath)
@@ -61,12 +61,12 @@ func runInstall(cmd *cobra.Command, args []string) {
 		fmt.Println("Mode:   User installation")
 	}
 	fmt.Println()
-	
+
 	// Check if already installed
 	if _, err := os.Stat(exePath); err == nil {
 		fmt.Println("⚠ Forge is already installed at:", exePath)
 		fmt.Print("Do you want to reinstall/update? (yes/no): ")
-		
+
 		var response string
 		fmt.Scanln(&response)
 		if response != "yes" && response != "y" {
@@ -75,7 +75,7 @@ func runInstall(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println()
 	}
-	
+
 	// Create installation directory
 	if err := os.MkdirAll(installDir, 0755); err != nil {
 		if systemInstall {
@@ -89,18 +89,18 @@ func runInstall(cmd *cobra.Command, args []string) {
 		}
 		os.Exit(1)
 	}
-	
+
 	// Copy executable
 	if err := copyFile(currentExe, exePath); err != nil {
 		exitWithError("failed to copy forge.exe", err)
 	}
-	
+
 	if systemInstall {
 		fmt.Println("✓ Copied forge.exe to Program Files")
 	} else {
 		fmt.Println("✓ Copied forge.exe to user bin directory")
 	}
-	
+
 	// Add to PATH
 	if err := addToPath(installDir); err != nil {
 		fmt.Printf("⚠ Could not automatically add to PATH: %v\n", err)
@@ -113,9 +113,9 @@ func runInstall(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Println("✓ Added to User PATH")
 	}
-	
+
 	fmt.Println("\n✓ Installation complete!")
-	
+
 	// Setup global templates directory
 	setupGlobalTemplates()
 }
@@ -125,7 +125,7 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return os.WriteFile(dst, input, 0755)
 }
 
@@ -143,6 +143,37 @@ func setupGlobalTemplates() error {
 	fmt.Println("\nForge can use a global templates directory for sharing templates")
 	fmt.Println("across all your projects.")
 	fmt.Printf("\nProposed location: %s\n", globalTemplatesDir)
+
+	// Check if global templates directory already exists
+	if _, err := os.Stat(globalTemplatesDir); err == nil {
+		fmt.Println("\n⚠ Global templates directory already exists!")
+		fmt.Print("Do you want to preserve existing templates? (yes/no): ")
+		var preserveResponse string
+		fmt.Scanln(&preserveResponse)
+
+		if preserveResponse == "yes" || preserveResponse == "y" {
+			fmt.Printf("\n✓ Preserving existing templates in: %s\n", globalTemplatesDir)
+			// Set environment variable if not already set
+			return setForgeTemplatesEnvVar(globalTemplatesDir)
+		}
+
+		fmt.Println("⚠ Warning: Existing templates will be removed!")
+		fmt.Print("Are you sure you want to continue? (yes/no): ")
+		var confirmResponse string
+		fmt.Scanln(&confirmResponse)
+
+		if confirmResponse != "yes" && confirmResponse != "y" {
+			fmt.Println("\n✓ Installation cancelled. Existing templates preserved.")
+			return nil
+		}
+
+		// Remove existing directory
+		if err := os.RemoveAll(globalTemplatesDir); err != nil {
+			fmt.Printf("⚠ Warning: Could not remove existing templates directory: %v\n", err)
+			return nil
+		}
+		fmt.Println("✓ Removed existing templates directory")
+	}
 
 	fmt.Print("\nWould you like to set up a global templates directory? (yes/no): ")
 	var response string
@@ -173,6 +204,10 @@ func setupGlobalTemplates() error {
 	fmt.Printf("✓ Created global templates directory: %s\n", globalTemplatesDir)
 
 	// Set environment variable
+	return setForgeTemplatesEnvVar(globalTemplatesDir)
+}
+
+func setForgeTemplatesEnvVar(globalTemplatesDir string) error {
 	fmt.Println("\nSetting FORGE_TEMPLATES environment variable...")
 	psCmd := fmt.Sprintf(`
 		[Environment]::SetEnvironmentVariable("FORGE_TEMPLATES", "%s", "User")
@@ -222,14 +257,14 @@ func addToPath(dir string) error {
 			Write-Host "Already in PATH"
 		}
 	`, dir, dir)
-	
+
 	// Execute PowerShell command
 	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
 	output, err := cmd.CombinedOutput()
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to modify PATH: %w (output: %s)", err, string(output))
 	}
-	
+
 	return nil
 }

@@ -31,6 +31,8 @@ Forge is organized into distinct modules, each with a single responsibility.
     -   Reads YAML configuration.
     -   Validates structure (commands, files, patches).
     -   Ensures no forbidden operations are requested.
+    -   Supports optional metadata fields: `description` and `version`.
+    -   Recognizes `interactive` and `test_cmd` on commands to support deterministic `forge test` runs.
 
 ### 3. Workspace Module (`internal/workspace/`)
 -   **Role:** Manages the temporary execution environment.
@@ -47,6 +49,7 @@ Forge is organized into distinct modules, each with a single responsibility.
     -   Executes commands (e.g., `git`, `npm`) within the workspace context.
     -   Handles `stdin`/`stdout` streams (suppressed by default, attached in `--interactive` mode).
     -   Enforces "fail-fast" behavior on command errors.
+    -   Supports a *test mode* that replaces or skips interactive commands: `test_cmd` is used when present; otherwise interactive steps are skipped with a clear log message.
 
 ### 5. File Operations (`internal/fileops/`)
 -   **Role:** Handles file copying and patching.
@@ -62,7 +65,15 @@ Forge is organized into distinct modules, each with a single responsibility.
 -   **Responsibility:**
     -   Moves the contents of the temporary workspace to the final user destination.
     -   **Safety Check:** Detects if the temp dir and target dir are on different volumes.
-    -   **Atomic Move:** Uses `MoveFileEx` where possible, or falls back to a safe copy-and-delete strategy with rollback capabilities if a move isn't possible.
+        -   **Atomic Move:** Uses `MoveFileEx` where possible, or falls back to a safe copy-and-delete strategy with rollback capabilities if a move isn't possible.
+
+### 7. Remote / Pull Module (`internal/remote/`)
+- **Role:** Download and install templates from the official templates repository.
+- **Key Components:** `download.go` (ZIP download, prefix detection, extraction helpers)
+- **Responsibility:**
+    - Download repository ZIP from GitHub into a temp file and detect the dynamic top-level prefix (e.g., `forge-templates-main/`).
+    - Enumerate and validate top-level directories; install a single template or all templates into `%USERPROFILE%\\.forge\\templates`.
+    - Replace existing templates atomically (remove then extract) and provide clear errors for network, extraction, or validation failures.
 
 ---
 
