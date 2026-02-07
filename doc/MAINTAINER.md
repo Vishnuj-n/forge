@@ -1,47 +1,71 @@
-# MAINTAINER.md
+# Maintainer Journal — Forge CLI
 
-## Project Overview
+## Purpose
+This document exists so future-me understands:
+- how this repo is structured
+- how releases work
+- what rules must not be broken
 
-- Go CLI tool
+---
+
+## Branch Strategy
+
+### main
+- Always releasable
+- Every release is built from `main`
+- No direct commits except via PR or squash merge
+
+### feature/*
+- All development happens here
+- Many small commits allowed
+- Never released directly
+
+---
+
+## Release Rules
+
+- Releases are **automatic**
+- Triggered by pushing to `main`
+- Tags are **NOT created manually**
+- Version bump: PATCH only (v0.1.x)
+- Tag is created by GitHub Actions
+- Release notes come from the final merge commit
+
+To release:
+- Use squash merge
+- Include `[release]` in commit message
+
+---
+
+## CI/CD Behavior
+
 - Go version: 1.25
-- All development on feature branches
-- `main` branch is always releasable
+- Runner: ubuntu-latest
+- Cross-compiles Windows `.exe`
+- CGO disabled
+- Output: `dist/forge.exe`
+- Releases created via GitHub Actions
 
-## Branching and Commit Rules
+---
 
-- Feature branches: small, incremental commits allowed
-- Merge to `main` via squash merge only
-- `main` must always pass build and tests
+## Commit Conventions
 
-## Release Process
+- Small commits allowed in feature branches
+- Release commit must be clean and descriptive
+- Avoid “merge branch …” commits
 
-- Releases are fully automated via GitHub Actions
-- No manual tag creation
-- Tags follow `v0.1.x` (PATCH only)
-- Release triggers on push to `main` with `[release]` in the final merge commit message
-- Workflow:
-  - Finds latest tag
-  - Builds from latest commit on `main`
-  - Cross-compiles Windows `.exe` on Ubuntu
-  - Creates GitHub release
-  - Uses final merge commit message as release notes
+---
 
-## Versioning
+## Things I Must Remember
 
-- Only PATCH version bumps (e.g., `v0.1.3` to `v0.1.4`)
-- No manual tag management
+- Do NOT manually create tags
+- Do NOT create releases from GitHub UI
+- Do NOT push directly to `main`
+- Keep release notes human-readable
 
-## Release Notes
+---
 
-- Release notes are taken from the final merge commit message
-
-## Intentional Releases
-
-- Only push to `main` with `[release]` in the merge commit message when a release is intended
-
-## Maintenance
-
-- Keep `main` clean and always releasable
-- Use feature branches for all changes
-- Review and test before merging to `main`
-- Monitor GitHub Actions for build and release status
+## Future Improvements (Ideas)
+- Winget automation
+- Chocolatey packaging
+- Code signing
