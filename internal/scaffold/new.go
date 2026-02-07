@@ -220,7 +220,7 @@ Use this to:
 
 Create a new project:
 
-    forge init templates/%s ./my-project
+    forge init <template-name> [project-dir]
 
 Or pull and use from remote:
 
