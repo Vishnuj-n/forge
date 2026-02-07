@@ -31,11 +31,9 @@ func runUninstall(cmd *cobra.Command, args []string) {
 	var installDir, exePath string
 
 	if systemUninstall {
-		// System-wide uninstallation
 		installDir = filepath.Join("C:", string(filepath.Separator), "Program Files", "Forge")
 		exePath = filepath.Join(installDir, "forge.exe")
 	} else {
-		// User-based uninstallation (default)
 		userProfile := os.Getenv("USERPROFILE")
 		if userProfile == "" {
 			exitWithError("USERPROFILE environment variable not set", nil)
@@ -69,14 +67,25 @@ func runUninstall(cmd *cobra.Command, args []string) {
 	// Remove global templates directory
 	userProfile := os.Getenv("USERPROFILE")
 	globalTemplatesDir := ""
+	configPath := ""
 	if userProfile != "" {
 		globalTemplatesDir = filepath.Join(userProfile, ".forge", "templates")
+		configPath = filepath.Join(userProfile, ".forge", "config.yaml")
 		if _, err := os.Stat(globalTemplatesDir); err == nil {
 			fmt.Printf("\nRemoving global templates directory: %s\n", globalTemplatesDir)
 			if err := os.RemoveAll(globalTemplatesDir); err != nil {
 				fmt.Printf("⚠ Warning: Could not remove templates directory: %v\n", err)
 			} else {
 				fmt.Println("✓ Removed templates directory")
+			}
+		}
+		// Remove config file
+		if _, err := os.Stat(configPath); err == nil {
+			fmt.Printf("\nRemoving config file: %s\n", configPath)
+			if err := os.Remove(configPath); err != nil {
+				fmt.Printf("⚠ Warning: Could not remove config file: %v\n", err)
+			} else {
+				fmt.Println("✓ Removed config file")
 			}
 		}
 	}

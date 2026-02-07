@@ -18,32 +18,44 @@ var installCmd = &cobra.Command{
 This command copies forge.exe to %USERPROFILE%\bin and adds it to your User PATH.
 No Administrator privileges required.
 
-For system-wide installation to Program Files, use: forge install --system`,
+For system-wide installation to Program Files, use: forge install --system
+
+Flags:
+  --force      Re-run full setup and prompts
+  --bin-only   Only replace binary, skip all setup
+`,
 	Run: runInstall,
 }
 
 var systemInstall bool
+var forceInstall bool
+var binOnlyInstall bool
 
 func init() {
 	installCmd.Flags().BoolVar(&systemInstall, "system", false, "Install to Program Files (requires Administrator)")
+	installCmd.Flags().BoolVar(&forceInstall, "force", false, "Re-run full setup and prompts")
+	installCmd.Flags().BoolVar(&binOnlyInstall, "bin-only", false, "Only replace binary, skip all setup")
 	rootCmd.AddCommand(installCmd)
 }
 
 func runInstall(cmd *cobra.Command, args []string) {
 	var installDir, exePath string
-
+	userProfile := os.Getenv("USERPROFILE")
 	if systemInstall {
-		// System-wide installation
 		installDir = filepath.Join("C:", string(filepath.Separator), "Program Files", "Forge")
 		exePath = filepath.Join(installDir, "forge.exe")
 	} else {
-		// User-based installation (default)
-		userProfile := os.Getenv("USERPROFILE")
 		if userProfile == "" {
 			exitWithError("USERPROFILE environment variable not set", nil)
 		}
 		installDir = filepath.Join(userProfile, "bin")
 		exePath = filepath.Join(installDir, "forge.exe")
+	}
+
+	// Config file path
+	configPath := ""
+	if userProfile != "" {
+		configPath = filepath.Join(userProfile, ".forge", "config.yaml")
 	}
 
 	// Get current executable path
@@ -52,6 +64,15 @@ func runInstall(cmd *cobra.Command, args []string) {
 		exitWithError("failed to get current executable path", err)
 	}
 
+	// Check config file
+	configExists := false
+	if configPath != "" {
+		if _, err := os.Stat(configPath); err == nil {
+			configExists = true
+		}
+	}
+
+	// Install/replace binary
 	fmt.Println("Installing Forge...")
 	fmt.Printf("Source: %s\n", currentExe)
 	fmt.Printf("Target: %s\n", exePath)
@@ -61,20 +82,6 @@ func runInstall(cmd *cobra.Command, args []string) {
 		fmt.Println("Mode:   User installation")
 	}
 	fmt.Println()
-
-	// Check if already installed
-	if _, err := os.Stat(exePath); err == nil {
-		fmt.Println("⚠ Forge is already installed at:", exePath)
-		fmt.Print("Do you want to reinstall/update? (yes/no): ")
-
-		var response string
-		fmt.Scanln(&response)
-		if response != "yes" && response != "y" {
-			fmt.Println("Installation cancelled.")
-			return
-		}
-		fmt.Println()
-	}
 
 	// Create installation directory
 	if err := os.MkdirAll(installDir, 0755); err != nil {
@@ -114,10 +121,31 @@ func runInstall(cmd *cobra.Command, args []string) {
 		fmt.Println("✓ Added to User PATH")
 	}
 
-	fmt.Println("\n✓ Installation complete!")
+	// Install logic
+	if binOnlyInstall {
+		fmt.Println("\n✓ Binary replaced (bin-only mode). No setup or prompts.")
+		return
+	}
 
-	// Setup global templates directory
-	setupGlobalTemplates()
+	if configExists && !forceInstall {
+		fmt.Println("\nForge already installed. Skipping setup and prompts.")
+		fmt.Println("✓ Done")
+		return
+	}
+
+	// First install or --force: run full setup
+	if err := setupGlobalTemplates(); err != nil {
+		fmt.Printf("⚠ Warning: Global templates setup failed: %v\n", err)
+	}
+
+	// Write config file
+	if configPath != "" {
+		if err := os.MkdirAll(filepath.Dir(configPath), 0755); err == nil {
+			_ = os.WriteFile(configPath, []byte("templates_initialized: true\n"), 0644)
+		}
+	}
+
+	fmt.Println("\n✓ Forge installed and configured.")
 }
 
 func copyFile(src, dst string) error {
