@@ -125,13 +125,23 @@ func loadFromPath(resolvedPath string) (*Template, error) {
 		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
 
-	// Parse YAML
-	var tmpl Template
-	if err := yaml.Unmarshal(data, &tmpl); err != nil {
+	// Parse using shared Parse function
+	tmpl, err := Parse(data)
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse template YAML: %w", err)
 	}
 
-	// Validate
+	return tmpl, nil
+}
+
+// Parse parses template YAML data into a Template and validates it.
+// This is a public helper to allow callers to parse YAML without duplicating logic.
+func Parse(data []byte) (*Template, error) {
+	var tmpl Template
+	if err := yaml.Unmarshal(data, &tmpl); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal template YAML: %w", err)
+	}
+
 	if err := tmpl.validate(); err != nil {
 		return nil, fmt.Errorf("template validation failed: %w", err)
 	}
