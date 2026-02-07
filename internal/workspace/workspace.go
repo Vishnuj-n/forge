@@ -18,7 +18,7 @@ func New() (*Workspace, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp workspace: %w", err)
 	}
-	
+
 	return &Workspace{path: tempDir}, nil
 }
 
@@ -42,7 +42,7 @@ func GetVolume(path string) string {
 	if err != nil {
 		return ""
 	}
-	
+
 	vol := filepath.VolumeName(absPath)
 	return vol
 }
@@ -51,10 +51,10 @@ func GetVolume(path string) string {
 func SameVolume(path1, path2 string) bool {
 	vol1 := GetVolume(path1)
 	vol2 := GetVolume(path2)
-	
+
 	if vol1 == "" || vol2 == "" {
 		return false
 	}
-	
+
 	return vol1 == vol2
 }
