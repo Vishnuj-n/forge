@@ -1,9 +1,3 @@
-Here is a **clean, short, and user-friendly README** that follows the rules we discussed and **explicitly tells the user to open PowerShell in the folder where `forge.exe` is downloaded**.
-
-You can use this as your main `README.md`.
-
----
-
 # Forge — Windows Project Bootstrapper CLI
 
 Forge is a Windows CLI for creating new projects from reusable templates.
