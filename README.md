@@ -61,26 +61,24 @@ Templates are stored in:
 
 ---
 
+Here is an expanded, precise version that stays concise but removes ambiguity:
+
+````markdown
 ### Create a project
 
 ```powershell
-forge init git ./my-project
-```
-
-* Creates (or uses) `./my-project`
-* Initializes the project inside that directory
-
----
-
-### Initialize in current directory
-
-```powershell
 forge init git
-```
+````
 
-Initializes the project in the **current working directory**.
+* Initializes a new project using the `git` template
+* Uses the **current working directory** as the project root
+* Does **not** create a new folder
 
----
+> **Note:**
+> • The current directory must be **empty** (no files or subdirectories)
+> • Forge will **refuse to run** if files are present, to prevent accidental overwrites
+> • This mode is intended for users who have already created and navigated into a project folder
+
 
 ### Other useful commands
 
