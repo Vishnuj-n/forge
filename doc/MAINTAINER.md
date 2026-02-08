@@ -33,7 +33,11 @@ This document exists so future-me understands:
 
 To release:
 - Use squash merge
-- Include `[release]` in commit message
+- Include `[release]` in the final merge commit message when you intend a release
+
+Notes:
+- `forge install` now persists configuration at `%USERPROFILE%/.forge/config.yaml` to avoid re-running setup on reinstall
+- Use `forge install --force` to re-run setup prompts, or `forge install --bin-only` to only replace the executable
 
 ---
 

@@ -35,6 +35,12 @@ This file records major technical and process decisions for the Forge CLI projec
 - Release notes are taken from the final merge commit message.
 - Windows `.exe` is cross-compiled on Ubuntu and attached to the release.
 
+## 2026-02-07: Install/Uninstall Behavior
+- Installation is idempotent: binary replacement and configuration are separated
+- A config file `%USERPROFILE%/.forge/config.yaml` records `templates_initialized: true`
+- `forge install` skips template setup when config exists; `--force` re-runs setup; `--bin-only` replaces binary only
+- `forge uninstall` removes the config file during cleanup
+
 ## 2026-02-07: Branching and Merging
 - All development happens on feature branches.
 - `main` is always releasable.

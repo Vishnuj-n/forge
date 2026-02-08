@@ -62,6 +62,8 @@ This package contains the CLI command definitions using the Cobra library.
     - Determines the installation directory (User `bin` or `Program Files`).
     - Copies the running executable to the target location.
     - Updates the user's PATH environment variable using PowerShell if necessary.
+    - Persists installation state to `%USERPROFILE%/.forge/config.yaml` (first install only)
+    - Flags supported: `--force` (re-run full setup), `--bin-only` (replace only binary)
 
 ### `cmd/forge/list.go`
 **Purpose**: Implements the `forge list` command to display available templates.
@@ -118,6 +120,7 @@ This package contains the CLI command definitions using the Cobra library.
 - `runUninstall(cmd *cobra.Command, args []string)`:
     - Removes the `forge` executable.
     - Removes the global templates directory.
+    - Removes `%USERPROFILE%/.forge/config.yaml` during cleanup
     - Removes `forge` from the PATH variable.
     - Spawns a self-deleting PowerShell script (`createAndSpawnCleanupScript`) to delete the currently running executable after it exits.
 - `removeFromPath(dir string) error`: Uses PowerShell to remove a directory from the user's PATH.
