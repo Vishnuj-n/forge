@@ -10,8 +10,6 @@ permissions:
 
 jobs:
   release:
-    # Only run if the latest commit explicitly requests a release
-    if: contains(github.event.head_commit.message, '[release]')
     runs-on: ubuntu-latest
 
     steps:
@@ -25,31 +23,58 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 'stable'
+          go-version: stable
 
-      # Get latest tag
+      # Get latest valid semver tag (vX.Y.Z only)
       - name: Get latest tag
         id: last_tag
         run: |
-          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "tag=$tag" >> $GITHUB_OUTPUT
+          tag=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
+          echo "tag=${tag:-v0.0.0}" >> "$GITHUB_OUTPUT"
 
-      # Calculate next PATCH version
+      # Determine next version safely
       - name: Calculate next version
         id: next_version
         run: |
-          tag=${{ steps.last_tag.outputs.tag }}
-          version=${tag#v}
+          msg=$(git log -1 --pretty=format:%B)
+
+          # Only release when explicitly requested
+          if ! [[ "$msg" =~ \[(major|minor|patch)\] ]]; then
+            echo "No version bump requested. Skipping release."
+            exit 0
+          fi
+
+          tag="${{ steps.last_tag.outputs.tag }}"
+          version="${tag#v}"
+
+          if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            version="0.0.0"
+          fi
+
           IFS='.' read -r major minor patch <<< "$version"
-          patch=$((patch + 1))
-          echo "next=v$major.$minor.$patch" >> $GITHUB_OUTPUT
 
-      # Use ONLY the latest commit message as release notes
-      - name: Prepare release notes from latest commit
+          if [[ "$msg" == *"[major]"* ]]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [[ "$msg" == *"[minor]"* ]]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+
+          echo "next=v$major.$minor.$patch" >> "$GITHUB_OUTPUT"
+
+      # Prepare clean release notes
+      - name: Prepare release notes
         run: |
-          git log -1 --pretty=format:"%B" > notes.txt
+          git log -1 --pretty=format:%B \
+            | sed -E 's/\[(major|minor|patch)\]//gi' \
+            | sed '/^$/d' \
+            > notes.txt
 
-      # Build Windows executable
+      # Build Windows binary
       - name: Build Windows binary
         run: |
           mkdir -p dist
@@ -63,5 +88,4 @@ jobs:
           tag_name: ${{ steps.next_version.outputs.next }}
           name: Release ${{ steps.next_version.outputs.next }}
           body_path: notes.txt
-          files: |
-            dist/forge.exe
+          files: dist/forge.exe
