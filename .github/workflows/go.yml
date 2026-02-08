@@ -25,24 +25,37 @@ jobs:
         with:
           go-version: stable
 
-      # Get latest valid semver tag (vX.Y.Z only)
+      # Read latest commit message and decide whether to continue
+      - name: Check release intent
+        id: intent
+        run: |
+          msg=$(git log -1 --pretty=format:%B)
+
+          if [[ "$msg" =~ \[(release|major|minor|patch)\] ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Stop job if no release marker is present
+      - name: Stop if no release requested
+        if: steps.intent.outputs.run != 'true'
+        run: |
+          echo "No release marker found. Skipping."
+          exit 0
+
+      # Get latest valid semver tag
       - name: Get latest tag
         id: last_tag
         run: |
           tag=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
           echo "tag=${tag:-v0.0.0}" >> "$GITHUB_OUTPUT"
 
-      # Determine next version safely
+      # Calculate next version
       - name: Calculate next version
         id: next_version
         run: |
           msg=$(git log -1 --pretty=format:%B)
-
-          # Only release when explicitly requested
-          if ! [[ "$msg" =~ \[(major|minor|patch)\] ]]; then
-            echo "No version bump requested. Skipping release."
-            exit 0
-          fi
 
           tag="${{ steps.last_tag.outputs.tag }}"
           version="${tag#v}"
@@ -70,7 +83,7 @@ jobs:
       - name: Prepare release notes
         run: |
           git log -1 --pretty=format:%B \
-            | sed -E 's/\[(major|minor|patch)\]//gi' \
+            | sed -E 's/\[(release|major|minor|patch)\]//gi' \
             | sed '/^$/d' \
             > notes.txt
 
