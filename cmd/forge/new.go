@@ -1,9 +1,12 @@
 package forge
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"forge/internal/scaffold"
 
@@ -58,6 +61,23 @@ func runNew(cmd *cobra.Command, args []string) {
 	// Print success message
 	fmt.Println("")
 	fmt.Println(scaffold.GetNextSteps(templateDir, templateName))
+
+	// Prompt to open the template folder
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Do you want to open the template folder? [y/N]: ")
+	resp, _ := reader.ReadString('\n')
+	resp = strings.TrimSpace(strings.ToLower(resp))
+	if resp == "y" || resp == "yes" {
+		openErr := openPath(templateDir)
+		if openErr != nil {
+			fmt.Printf("Failed to open template folder: %v\n", openErr)
+		}
+	}
+}
+
+func openPath(path string) error {
+	// Only use explorer for Windows
+	return exec.Command("explorer", path).Start()
 }
 
 func determineTemplatesDirForNew() string {
