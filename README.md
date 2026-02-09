@@ -108,13 +108,15 @@ forge --version
 ### Create a project
 
 ```powershell
-forge init git ./my-project
+forge init <template-name> [project-dir]
 ```
 
-* Creates (or uses) `./my-project`
-* Initializes the project inside that directory
 
----
+Examples:
+```powershell
+forge init python        # initialize in current directory
+forge init python app    # creates the template inside app directory
+```
 
 ### Initialize in current directory
 
