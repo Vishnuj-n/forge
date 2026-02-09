@@ -104,18 +104,25 @@ forge --version
 
 ## Basic Usage
 
+````markdown
 ### Create a project
 
 ```powershell
-forge init <template-name> [project-dir]
+forge init git ./my-project
 ```
 
-Examples:
+* Creates (or uses) `./my-project`
+* Initializes the project inside that directory
+
+---
+
+### Initialize in current directory
 
 ```powershell
-forge init python        # initialize in current directory
-forge init python app    # create and use ./app
+forge init git
 ```
+
+Initializes the project in the **current working directory** which should be empty.
 
 ---
 
