@@ -7,17 +7,27 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[release]')
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -30,7 +40,7 @@ jobs:
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
           go build -trimpath -ldflags="-s -w" -o dist/forge.exe
       - name: Generate new version tag
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
         id: version
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
@@ -52,7 +62,7 @@ jobs:
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
       - name: Create and push new tag
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
         env:
           NEW_TAG: ${{ steps.version.outputs.tag }}
         run: |
@@ -62,7 +72,7 @@ jobs:
           git push origin "$NEW_TAG"
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.tag }}

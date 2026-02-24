@@ -77,6 +77,30 @@ Forge relies heavily on integration tests to ensure filesystem safety.
 
 ---
 
+## 🎯 Merging & Releases
+
+**Squash merge to `main`** (recommended):
+- Keep commit history clean
+- One commit per feature/fix
+- Include `[release]` in the merge commit message **only if** you intend to trigger an automatic release
+
+**Example merge messages:**
+```
+# This will create a new release (v0.1.6):
+Merge PR #42: Add new commands [release]
+
+# This will NOT create a release:
+Merge PR #43: Fix documentation typo
+```
+
+**Important:**
+- Do NOT merge directly to `main` (always use PRs).
+- The `[release]` keyword is case-sensitive.
+- Releases are automated — check GitHub Actions if anything goes wrong.
+- See [`MAINTAINER.md`](doc/MAINTAINER.md#troubleshooting) for troubleshooting release issues.
+
+---
+
 ## 🚫 What We Don't Accept
 
 Forge has a strict scope for V1. Please do **not** submit PRs for:

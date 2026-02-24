@@ -32,8 +32,11 @@ This file records major technical and process decisions for the Forge CLI projec
 - Releases are fully automated using GitHub Actions.
 - Releases trigger on push to `main` with `[release]` in the merge commit message.
 - Tags are not created manually; PATCH version bumps only (e.g., `v0.1.3` → `v0.1.4`).
-- Release notes are taken from the final merge commit message.
+- Release notes are auto-generated from commit history.
 - Windows `.exe` is cross-compiled on Ubuntu and attached to the release.
+- Concurrency group queues simultaneous releases to prevent tag conflicts.
+- All tags fetched (`fetch-depth: 0`) to ensure accurate version detection.
+- Workflow skips entirely if `[release]` is not present and event is not a PR.
 
 ## 2026-02-07: Install/Uninstall Behavior
 - Installation is idempotent: binary replacement and configuration are separated
