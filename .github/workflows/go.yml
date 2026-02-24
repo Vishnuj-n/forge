@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -13,93 +16,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo with full history and tags
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Set Go version
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: stable
 
-      # Detect release intent from commit message (robust)
-      - name: Detect release intent
-        id: intent
-        run: |
-          msg=$(git log -1 --pretty=format:%B)
-          echo "Commit message:"
-          echo "$msg"
-
-          if [[ "$msg" =~ \[(release|patch|minor|major)\] ]]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Get latest valid semver tag
-      - name: Get latest tag
-        if: steps.intent.outputs.run == 'true'
-        id: last_tag
-        run: |
-          tag=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
-          echo "tag=${tag:-v0.0.0}" >> "$GITHUB_OUTPUT"
-
-      # Calculate next version safely
-      - name: Calculate next version
-        if: steps.intent.outputs.run == 'true'
-        id: next_version
-        run: |
-          msg=$(git log -1 --pretty=format:%B)
-
-          tag="${{ steps.last_tag.outputs.tag }}"
-          version="${tag#v}"
-
-          if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            version="0.0.0"
-          fi
-
-          IFS='.' read -r major minor patch <<< "$version"
-
-          if [[ "$msg" == *"[major]"* ]]; then
-            major=$((major + 1))
-            minor=0
-            patch=0
-          elif [[ "$msg" == *"[minor]"* ]]; then
-            minor=$((minor + 1))
-            patch=0
-          else
-            patch=$((patch + 1))
-          fi
-
-          echo "next=v$major.$minor.$patch" >> "$GITHUB_OUTPUT"
-
-      # Prepare clean release notes
-      - name: Prepare release notes
-        if: steps.intent.outputs.run == 'true'
-        run: |
-          git log -1 --pretty=format:%B \
-            | sed -E 's/\[(release|patch|minor|major)\]//gi' \
-            | sed '/^$/d' \
-            > notes.txt
-
-      # Build Windows binary
       - name: Build Windows binary
-        if: steps.intent.outputs.run == 'true'
         run: |
           mkdir -p dist
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
           go build -trimpath -ldflags="-s -w" -o dist/forge.exe
-
-      # Create GitHub Release
-      - name: Create GitHub Release
-        if: steps.intent.outputs.run == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.next_version.outputs.next }}
-          name: Release ${{ steps.next_version.outputs.next }}
-          body_path: notes.txt
-          files: |
-            dist/forge.exe
