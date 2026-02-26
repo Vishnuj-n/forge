@@ -9,12 +9,17 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 // DownloadRepoZip downloads the given URL into a temporary file and
 // returns the path to the downloaded zip file. Caller must remove the file.
 func DownloadRepoZip(url string) (string, error) {
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to download repository: %w", err)
 	}
