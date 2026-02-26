@@ -88,13 +88,7 @@ func ListTopLevelTemplates(zipPath string) ([]string, error) {
 
 // extractPrefixedFiles extracts all files under zipPrefix/templateName/ into destDir.
 // It validates presence of template.yaml inside the extracted content.
-func extractPrefixedFiles(zipPath, zipPrefix, templateName, destDir string) error {
-	z, err := zip.OpenReader(zipPath)
-	if err != nil {
-		return fmt.Errorf("failed to open zip: %w", err)
-	}
-	defer z.Close()
-
+func extractPrefixedFiles(z *zip.Reader, zipPrefix, templateName, destDir string) error {
 	wantedPrefix := zipPrefix + templateName + "/"
 	foundAny := false
 	foundYAML := false
@@ -129,25 +123,29 @@ func extractPrefixedFiles(zipPath, zipPrefix, templateName, destDir string) erro
 			return fmt.Errorf("failed to create parent dir %s: %w", filepath.Dir(targetPath), err)
 		}
 
-		rc, err := f.Open()
-		if err != nil {
-			return fmt.Errorf("failed to open zip entry: %w", err)
-		}
-		defer rc.Close()
+		// Helper to ensure files are closed promptly
+		err := func() error {
+			rc, err := f.Open()
+			if err != nil {
+				return fmt.Errorf("failed to open zip entry: %w", err)
+			}
+			defer rc.Close()
 
-		out, err := os.Create(targetPath)
-		if err != nil {
-			rc.Close()
-			return fmt.Errorf("failed to create file %s: %w", targetPath, err)
-		}
+			out, err := os.Create(targetPath)
+			if err != nil {
+				return fmt.Errorf("failed to create file %s: %w", targetPath, err)
+			}
+			defer out.Close()
 
-		if _, err := io.Copy(out, rc); err != nil {
-			out.Close()
-			rc.Close()
-			return fmt.Errorf("failed to write file %s: %w", targetPath, err)
+			if _, err := io.Copy(out, rc); err != nil {
+				return fmt.Errorf("failed to write file %s: %w", targetPath, err)
+			}
+			return nil
+		}()
+
+		if err != nil {
+			return err
 		}
-		out.Close()
-		rc.Close()
 
 		if filepath.Base(targetPath) == "template.yaml" {
 			foundYAML = true
@@ -179,7 +177,7 @@ func InstallSingleTemplate(zipPath, templateName, destParentDir string) error {
 	}
 
 	destDir := filepath.Join(destParentDir, templateName)
-	if err := extractPrefixedFiles(zipPath, prefix, templateName, destDir); err != nil {
+	if err := extractPrefixedFiles(&zf.Reader, prefix, templateName, destDir); err != nil {
 		return err
 	}
 	return nil
@@ -216,7 +214,7 @@ func InstallAllTemplates(zipPath, destParentDir string) ([]string, error) {
 	installed := make([]string, 0, len(candidates))
 	for name := range candidates {
 		destDir := filepath.Join(destParentDir, name)
-		err := extractPrefixedFiles(zipPath, prefix, name, destDir)
+		err := extractPrefixedFiles(&zf.Reader, prefix, name, destDir)
 		if err != nil {
 			// skip invalid templates, but continue
 			continue

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"forge/internal/workspace"
 )
@@ -24,6 +25,15 @@ func (c *Committer) Commit(workspacePath, targetPath string) error {
 		targetExists = true
 		if !info.IsDir() {
 			return fmt.Errorf("target path exists but is not a directory")
+		}
+
+		// Ensure target directory is empty
+		empty, err := isDirEmpty(targetPath)
+		if err != nil {
+			return fmt.Errorf("failed to check if target directory is empty: %w", err)
+		}
+		if !empty {
+			return fmt.Errorf("target directory is not empty")
 		}
 	}
 
@@ -167,9 +177,17 @@ func isSubPath(child, parent string) bool {
 
 // startsWithDotDot checks if path starts with ".."
 func startsWithDotDot(path string) bool {
-	parts := filepath.SplitList(path)
-	if len(parts) == 0 {
-		return false
+	if path == ".." {
+		return true
 	}
-	return parts[0] == ".." || filepath.HasPrefix(path, ".."+string(filepath.Separator))
+	return strings.HasPrefix(path, ".."+string(filepath.Separator))
+}
+
+// isDirEmpty checks if the directory at path is empty
+func isDirEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
 }
