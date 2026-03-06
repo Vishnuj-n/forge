@@ -29,6 +29,8 @@ This document exists so future-me understands:
 - Tags are **NOT created manually**
 - Version bump: PATCH only (v0.1.x)
 - Tag is created by GitHub Actions
+
+**Versions are injected automatically from Git tags via `ldflags`. Do not manually edit the `var Version = "development"` in `cmd/forge/root.go`. Let the CI/CD pipeline inject the correct version at build time.**
 - Release notes come from the final merge commit
 
 To release:

@@ -30,11 +30,13 @@ Flags:
 var systemInstall bool
 var forceInstall bool
 var binOnlyInstall bool
+var yesInstall bool
 
 func init() {
 	installCmd.Flags().BoolVar(&systemInstall, "system", false, "Install to Program Files (requires Administrator)")
 	installCmd.Flags().BoolVar(&forceInstall, "force", false, "Re-run full setup and prompts")
 	installCmd.Flags().BoolVar(&binOnlyInstall, "bin-only", false, "Only replace binary, skip all setup")
+	installCmd.Flags().BoolVarP(&yesInstall, "yes", "y", false, "Skip all prompts and accept default configuration")
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -175,9 +177,14 @@ func setupGlobalTemplates() error {
 	// Check if global templates directory already exists
 	if _, err := os.Stat(globalTemplatesDir); err == nil {
 		fmt.Println("\n⚠ Global templates directory already exists!")
-		fmt.Print("Do you want to preserve existing templates? (yes/no): ")
 		var preserveResponse string
-		fmt.Scanln(&preserveResponse)
+		if yesInstall {
+			fmt.Println("Auto-answering yes to preserve existing templates due to --yes flag.")
+			preserveResponse = "yes"
+		} else {
+			fmt.Print("Do you want to preserve existing templates? (yes/no): ")
+			fmt.Scanln(&preserveResponse)
+		}
 
 		if preserveResponse == "yes" || preserveResponse == "y" {
 			fmt.Printf("\n✓ Preserving existing templates in: %s\n", globalTemplatesDir)
@@ -203,9 +210,14 @@ func setupGlobalTemplates() error {
 		fmt.Println("✓ Removed existing templates directory")
 	}
 
-	fmt.Print("\nWould you like to set up a global templates directory? (yes/no): ")
 	var response string
-	fmt.Scanln(&response)
+	if yesInstall {
+		fmt.Println("\nAuto-answering yes to setup global templates directory due to --yes flag.")
+		response = "yes"
+	} else {
+		fmt.Print("\nWould you like to set up a global templates directory? (yes/no): ")
+		fmt.Scanln(&response)
+	}
 
 	if response != "yes" && response != "y" {
 		fmt.Println("\n✓ Skipped global templates setup")

@@ -92,6 +92,11 @@ Forge is useful if you:
 .\forge.exe install
 ```
 
+For silent/automated installation, use:
+```powershell
+.\forge.exe install --yes
+```
+
 4. Close and reopen PowerShell
 
 5. Verify:

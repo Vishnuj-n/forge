@@ -8,8 +8,14 @@ import (
 
 // IsNewerVersion compares two semantic versions (e.g., "0.1.5" vs "0.2.0")
 // Returns true if latest is newer than current.
+// If current is "development" (local build), any release version is considered newer.
 // Example: IsNewerVersion("0.1.5", "0.2.0") returns true
 func IsNewerVersion(current, latest string) (bool, error) {
+	// Development builds always consider any release as newer
+	if current == "development" {
+		return true, nil
+	}
+
 	currParts, err := parseVersion(current)
 	if err != nil {
 		return false, fmt.Errorf("invalid current version format: %w", err)
