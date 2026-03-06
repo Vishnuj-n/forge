@@ -1,3 +1,5 @@
+version: 2
+
 project_name: forge
 
 builds:
@@ -14,7 +16,7 @@ builds:
       - -s -w -X forge/cmd/forge.Version={{.Version}}
 
 archives:
-  - format: binary
+  - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
