@@ -15,12 +15,19 @@ const (
 	GitHubRepo  = "forge"
 )
 
-// CheckUpdate checks if a newer version is available on GitHub
-// Returns the new version string, whether an update is available, and any error
+// CheckUpdate checks if a newer version is available on GitHub.
+// When currentVersion is "development", the latest release is always considered
+// available so that dev builds are upgraded to a proper release.
+// Returns the new version string, whether an update is available, and any error.
 func CheckUpdate(currentVersion string) (newVersion string, available bool, err error) {
 	tagName, _, err := remote.FetchLatestReleaseVersion(GitHubOwner, GitHubRepo)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to check for updates: %w", err)
+	}
+
+	// Dev builds have no real version to compare; always offer the latest release.
+	if currentVersion == "development" {
+		return tagName, true, nil
 	}
 
 	isNewer, err := version.IsNewerVersion(currentVersion, tagName)
