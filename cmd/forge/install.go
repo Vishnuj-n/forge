@@ -140,7 +140,11 @@ func runInstall(cmd *cobra.Command, args []string) {
 
 	// Install logic
 	if binOnlyInstall {
-		fmt.Println("\n✓ Binary replaced (bin-only mode). No setup or prompts.")
+		if isWinGet {
+			fmt.Println("\n✓ Binary is managed by WinGet. No setup performed.")
+		} else {
+			fmt.Println("\n✓ Binary replaced (bin-only mode). No setup or prompts.")
+		}
 		return
 	}
 
