@@ -1,5 +1,4 @@
-name: Release Forge CLI
-name: Release Forge CLI
+name: Release
 
 on:
   push:
@@ -10,71 +9,21 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: windows-latest
+  goreleaser:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.25.6"
-          go-version: "1.25.6"
 
-      - name: Build Windows Binary
-        shell: bash
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-
-          mkdir -p dist
-
-
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build \
-          -trimpath \
-          -ldflags="-s -w -X 'forge/cmd/forge.Version=${TAG_NAME}'" \
-          -o dist/forge.exe
-
-      - name: Generate SHA256
-        shell: pwsh
-        run: |
-          $hash = (Get-FileHash dist/forge.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  forge.exe" | Out-File -Encoding utf8 dist/forge.exe.sha256
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: goreleaser/goreleaser-action@v6
         with:
-          files: |
-            dist/forge.exe
-            dist/forge.exe.sha256
-          files: |
-            dist/forge.exe
-            dist/forge.exe.sha256
-          generate_release_notes: true
-          name: Forge ${{ github.ref_name }}
-          name: Forge ${{ github.ref_name }}
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Submit to WinGet
-        shell: pwsh
-        run: |
-          # Install wingetcreate
-          Invoke-WebRequest -Uri https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
-
-          # Submit package update (or new package) to winget-pkgs
-          .\wingetcreate.exe update Vishnuj-n.Forge `
-            --urls "https://github.com/Vishnuj-n/forge/releases/download/${{ github.ref_name }}/forge.exe" `
-            --version "${{ github.ref_name }}" `
-            --submit `
-            --token "${{ secrets.WINGET_TOKEN }}"
-        env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}

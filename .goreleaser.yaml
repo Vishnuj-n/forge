@@ -1,0 +1,26 @@
+project_name: forge
+
+builds:
+  - id: forge
+    main: .
+    binary: forge
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X forge/cmd/forge.Version={{.Version}}
+
+archives:
+  - format: binary
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: Vishnuj-n
+    name: forge
