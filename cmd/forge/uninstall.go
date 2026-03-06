@@ -30,16 +30,32 @@ func init() {
 func runUninstall(cmd *cobra.Command, args []string) {
 	var installDir, exePath string
 
+	currentExe, _ := os.Executable()
+	if realPath, err := filepath.EvalSymlinks(currentExe); err == nil {
+		currentExe = realPath
+	}
+
 	if systemUninstall {
 		installDir = filepath.Join("C:", string(filepath.Separator), "Program Files", "Forge")
 		exePath = filepath.Join(installDir, "forge.exe")
 	} else {
 		userProfile := os.Getenv("USERPROFILE")
-		if userProfile == "" {
-			exitWithError("USERPROFILE environment variable not set", nil)
+		defaultUserExe := ""
+		if userProfile != "" {
+			defaultUserExe = filepath.Join(userProfile, "bin", "forge.exe")
 		}
-		installDir = filepath.Join(userProfile, "bin")
-		exePath = filepath.Join(installDir, "forge.exe")
+
+		isCurrentWinGet := strings.Contains(strings.ToLower(currentExe), "winget")
+		isCurrentBin := strings.EqualFold(filepath.Base(filepath.Dir(currentExe)), "bin")
+		
+		if (isCurrentWinGet || isCurrentBin) && currentExe != "" {
+			exePath = currentExe
+		} else if defaultUserExe != "" {
+			exePath = defaultUserExe
+		} else {
+			exePath = currentExe
+		}
+		installDir = filepath.Dir(exePath)
 	}
 
 	// Check if installed
@@ -47,13 +63,22 @@ func runUninstall(cmd *cobra.Command, args []string) {
 		if systemUninstall {
 			fmt.Println("Forge is not installed in Program Files")
 		} else {
-			fmt.Println("Forge is not installed in user bin directory")
+			fmt.Println("Forge is not installed at:", exePath)
 		}
 		return
 	}
 
+	isWinGet := strings.Contains(strings.ToLower(exePath), "winget")
+	if isWinGet {
+		fmt.Println("⚠ Note: Forge was installed via WinGet.")
+		fmt.Println("This command will clean up local data (templates, config).")
+		fmt.Println("To completely remove the package, you should ALSO run:")
+		fmt.Println("  winget uninstall Vishnuj-n.forge")
+		fmt.Println()
+	}
+
 	fmt.Println("Forge is installed at:", exePath)
-	fmt.Print("\nDo you want to uninstall? (yes/no): ")
+	fmt.Print("\nDo you want to continue with cleanup/uninstall? (yes/no): ")
 
 	var response string
 	fmt.Scanln(&response)
@@ -91,41 +116,54 @@ func runUninstall(cmd *cobra.Command, args []string) {
 	}
 
 	// Remove from PATH
-	if err := removeFromPath(installDir); err != nil {
-		fmt.Printf("⚠ Warning: Could not automatically remove from PATH: %v\n", err)
-		fmt.Println("\nYou may need to manually remove from PATH:")
-		fmt.Println("1. Open: Settings → System → About → Advanced system settings")
-		fmt.Println("2. Click: Environment Variables")
-		fmt.Println("3. Under User variables, edit Path")
-		fmt.Printf("4. Remove: %s\n", installDir)
-		fmt.Println("5. Click OK and restart your terminal")
+	if !isWinGet {
+		if err := removeFromPath(installDir); err != nil {
+			fmt.Printf("⚠ Warning: Could not automatically remove from PATH: %v\n", err)
+			fmt.Println("\nYou may need to manually remove from PATH:")
+			fmt.Println("1. Open: Settings → System → About → Advanced system settings")
+			fmt.Println("2. Click: Environment Variables")
+			fmt.Println("3. Under User variables, edit Path")
+			fmt.Printf("4. Remove: %s\n", installDir)
+			fmt.Println("5. Click OK and restart your terminal")
+		} else {
+			fmt.Println("✓ Removed from User PATH")
+		}
 	} else {
-		fmt.Println("✓ Removed from User PATH")
+		fmt.Println("✓ Skipped PATH removal (managed by WinGet)")
 	}
 
 	// Remove FORGE_TEMPLATES environment variable
 	removeForgeTemplatesEnv()
 
 	// Create and spawn cleanup script
-	fmt.Println("\nRemoving forge.exe...")
-	if err := createAndSpawnCleanupScript(exePath); err != nil {
-		fmt.Printf("⚠ Warning: Could not spawn cleanup script: %v\n", err)
-		fmt.Println("\n" + strings.Repeat("=", 60))
-		fmt.Println("Forge has been partially uninstalled.")
-		fmt.Println(strings.Repeat("=", 60))
-		fmt.Printf("\nPlease delete the executable manually:\n  %s\n", exePath)
-		fmt.Println("\nYou can delete it using:")
-		fmt.Printf("  del \"%s\"\n", exePath)
-		return
-	}
+	if !isWinGet {
+		fmt.Println("\nRemoving forge.exe...")
+		if err := createAndSpawnCleanupScript(exePath); err != nil {
+			fmt.Printf("⚠ Warning: Could not spawn cleanup script: %v\n", err)
+			fmt.Println("\n" + strings.Repeat("=", 60))
+			fmt.Println("Forge has been partially uninstalled.")
+			fmt.Println(strings.Repeat("=", 60))
+			fmt.Printf("\nPlease delete the executable manually:\n  %s\n", exePath)
+			fmt.Println("\nYou can delete it using:")
+			fmt.Printf("  del \"%s\"\n", exePath)
+			return
+		}
 
-	fmt.Println("\n" + strings.Repeat("=", 60))
-	fmt.Println("Forge has been uninstalled successfully!")
-	fmt.Println(strings.Repeat("=", 60))
-	fmt.Println("\nCleanup in progress...")
-	fmt.Println("The executable will be removed automatically.")
-	fmt.Println("\nTo reinstall Forge later, download and run: forge install")
-	fmt.Println(strings.Repeat("=", 60))
+		fmt.Println("\n" + strings.Repeat("=", 60))
+		fmt.Println("Forge has been uninstalled successfully!")
+		fmt.Println(strings.Repeat("=", 60))
+		fmt.Println("\nCleanup in progress...")
+		fmt.Println("The executable will be removed automatically.")
+		fmt.Println("\nTo reinstall Forge later, download and run: forge install")
+		fmt.Println(strings.Repeat("=", 60))
+	} else {
+		fmt.Println("\n" + strings.Repeat("=", 60))
+		fmt.Println("Local data (templates, config) has been cleaned up!")
+		fmt.Println(strings.Repeat("=", 60))
+		fmt.Println("\nTo complete uninstallation, please run:")
+		fmt.Println("  winget uninstall Vishnuj-n.forge")
+		fmt.Println(strings.Repeat("=", 60))
+	}
 }
 
 func removeFromPath(dir string) error {
