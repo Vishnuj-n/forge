@@ -95,8 +95,14 @@ func getSearchPaths(templateName string) []string {
 	}
 
 	// 3. Check $HOME/.forge/templates/<templateName>
+	// Auto-create the global templates directory if it doesn't exist
+	// This ensures Forge works out of the box for WinGet Portable installs
 	if home, err := os.UserHomeDir(); err == nil {
-		paths = append(paths, filepath.Join(home, ".forge", "templates", templateName))
+		globalTemplatesDir := filepath.Join(home, ".forge", "templates")
+		if _, statErr := os.Stat(globalTemplatesDir); os.IsNotExist(statErr) {
+			_ = os.MkdirAll(globalTemplatesDir, 0755)
+		}
+		paths = append(paths, filepath.Join(globalTemplatesDir, templateName))
 	}
 
 	return paths

@@ -49,6 +49,10 @@ This file records major technical and process decisions for the Forge CLI projec
 - `main` is always releasable.
 - Feature branches are merged into `main` using squash merge.
 
+## 2026-03-06: Build-Time Version Injection and Silent Installs
+- Added build-time version injection using `ldflags` to prevent manual version drift. Default `Version` is `development` in the code, overridden by Git tags in CI. 
+- Added `--yes` flag to `forge install` to bypass all prompts. This was required for non-interactive installer tools like WinGet.
+
 ---
 
 For rationale and context, see commit messages and `MAINTAINER.md`.

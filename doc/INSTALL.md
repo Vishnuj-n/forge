@@ -34,6 +34,7 @@ go build -o forge.exe
 Notes:
 - Default user install places `forge.exe` in `%USERPROFILE%\bin` and sets `FORGE_TEMPLATES` to `%USERPROFILE%\.forge\templates`.
 - System install (`--system`) requires admin and installs to `C:\Program Files\Forge`.
+- Automated / Silent install: Use `forge install --yes` to skip all prompts and use defaults.
 
 Uninstall:
 
