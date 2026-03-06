@@ -49,9 +49,10 @@ func FetchLatestReleaseVersion(owner, repo string) (version string, downloadURL 
 
 	// Find Windows binary asset
 	expectedAsset := "forge.exe"
-	if runtime.GOOS == "darwin" {
+	switch runtime.GOOS {
+	case "darwin":
 		expectedAsset = "forge-darwin"
-	} else if runtime.GOOS == "linux" {
+	case "linux":
 		expectedAsset = "forge-linux"
 	}
 

@@ -43,6 +43,18 @@ func init() {
 func runInstall(cmd *cobra.Command, args []string) {
 	var installDir, exePath string
 	userProfile := os.Getenv("USERPROFILE")
+
+	// Get current executable path and resolve symlinks
+	currentExe, err := os.Executable()
+	if err != nil {
+		exitWithError("failed to get current executable path", err)
+	}
+	if realPath, err := filepath.EvalSymlinks(currentExe); err == nil {
+		currentExe = realPath
+	}
+
+	isWinGet := strings.Contains(strings.ToLower(currentExe), "winget")
+
 	if systemInstall {
 		installDir = filepath.Join("C:", string(filepath.Separator), "Program Files", "Forge")
 		exePath = filepath.Join(installDir, "forge.exe")
@@ -60,12 +72,6 @@ func runInstall(cmd *cobra.Command, args []string) {
 		configPath = filepath.Join(userProfile, ".forge", "config.yaml")
 	}
 
-	// Get current executable path
-	currentExe, err := os.Executable()
-	if err != nil {
-		exitWithError("failed to get current executable path", err)
-	}
-
 	// Check config file
 	configExists := false
 	if configPath != "" {
@@ -76,51 +82,60 @@ func runInstall(cmd *cobra.Command, args []string) {
 
 	// Install/replace binary
 	fmt.Println("Installing Forge...")
-	fmt.Printf("Source: %s\n", currentExe)
-	fmt.Printf("Target: %s\n", exePath)
-	if systemInstall {
-		fmt.Println("Mode:   System-wide (Program Files)")
-	} else {
-		fmt.Println("Mode:   User installation")
-	}
-	fmt.Println()
 
-	// Create installation directory
-	if err := os.MkdirAll(installDir, 0755); err != nil {
+	if isWinGet {
+		fmt.Printf("Source: %s (WinGet managed)\n", currentExe)
+		fmt.Println("\n⚠ Forge is currently running from a WinGet installation.")
+		fmt.Println("Binary placement and PATH are managed by WinGet.")
+		fmt.Println("Proceeding with global configuration setup...")
+		fmt.Println()
+	} else {
+		fmt.Printf("Source: %s\n", currentExe)
+		fmt.Printf("Target: %s\n", exePath)
 		if systemInstall {
-			fmt.Println("\n⚠ NOTE: Installation to Program Files requires Administrator privileges.")
-			fmt.Println("\nPlease run:")
-			fmt.Println("  1. Open PowerShell as Administrator")
-			fmt.Println("  2. Run: forge install --system")
-			fmt.Println("\nOr use default user installation without --system flag")
+			fmt.Println("Mode:   System-wide (Program Files)")
 		} else {
-			exitWithError("failed to create installation directory", err)
+			fmt.Println("Mode:   User installation")
 		}
-		os.Exit(1)
-	}
+		fmt.Println()
 
-	// Copy executable
-	if err := copyFile(currentExe, exePath); err != nil {
-		exitWithError("failed to copy forge.exe", err)
-	}
+		// Create installation directory
+		if err := os.MkdirAll(installDir, 0755); err != nil {
+			if systemInstall {
+				fmt.Println("\n⚠ NOTE: Installation to Program Files requires Administrator privileges.")
+				fmt.Println("\nPlease run:")
+				fmt.Println("  1. Open PowerShell as Administrator")
+				fmt.Println("  2. Run: forge install --system")
+				fmt.Println("\nOr use default user installation without --system flag")
+			} else {
+				exitWithError("failed to create installation directory", err)
+			}
+			os.Exit(1)
+		}
 
-	if systemInstall {
-		fmt.Println("✓ Copied forge.exe to Program Files")
-	} else {
-		fmt.Println("✓ Copied forge.exe to user bin directory")
-	}
+		// Copy executable
+		if err := copyFile(currentExe, exePath); err != nil {
+			exitWithError("failed to copy forge.exe", err)
+		}
 
-	// Add to PATH
-	if err := addToPath(installDir); err != nil {
-		fmt.Printf("⚠ Could not automatically add to PATH: %v\n", err)
-		fmt.Println("\nManual PATH setup:")
-		fmt.Println("1. Open: Settings → System → About → Advanced system settings")
-		fmt.Println("2. Click: Environment Variables")
-		fmt.Println("3. Under User variables, edit Path")
-		fmt.Printf("4. Add: %s\n", installDir)
-		fmt.Println("5. Click OK and restart your terminal")
-	} else {
-		fmt.Println("✓ Added to User PATH")
+		if systemInstall {
+			fmt.Println("✓ Copied forge.exe to Program Files")
+		} else {
+			fmt.Println("✓ Copied forge.exe to user bin directory")
+		}
+
+		// Add to PATH
+		if err := addToPath(installDir); err != nil {
+			fmt.Printf("⚠ Could not automatically add to PATH: %v\n", err)
+			fmt.Println("\nManual PATH setup:")
+			fmt.Println("1. Open: Settings → System → About → Advanced system settings")
+			fmt.Println("2. Click: Environment Variables")
+			fmt.Println("3. Under User variables, edit Path")
+			fmt.Printf("4. Add: %s\n", installDir)
+			fmt.Println("5. Click OK and restart your terminal")
+		} else {
+			fmt.Println("✓ Added to User PATH")
+		}
 	}
 
 	// Install logic

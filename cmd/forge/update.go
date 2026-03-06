@@ -3,6 +3,8 @@ package forge
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"forge/internal/update"
 
@@ -32,6 +34,15 @@ func runUpdate(cmd *cobra.Command, args []string) {
 	fmt.Printf("Current version: %s\n", current)
 	fmt.Print("Checking for updates...\n")
 
+	// Resolve current executable path
+	exePath, err := os.Executable()
+	if err != nil {
+		exitWithError("could not determine current executable path", err)
+	}
+	if realPath, err := filepath.EvalSymlinks(exePath); err == nil {
+		exePath = realPath
+	}
+
 	newVersion, available, err := update.CheckUpdate(current)
 	if err != nil {
 		exitWithError("failed to check for updates", err)
@@ -53,10 +64,13 @@ func runUpdate(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Resolve current executable path
-	exePath, err := os.Executable()
-	if err != nil {
-		exitWithError("could not determine current executable path", err)
+	isWinGet := strings.Contains(strings.ToLower(exePath), "winget")
+	if isWinGet {
+		fmt.Println("\n⚠ This installation is managed by WinGet.")
+		fmt.Println("Self-updating is disabled to prevent package manager registry corruption.")
+		fmt.Println("\nPlease run the following command instead:")
+		fmt.Println("  winget upgrade Vishnuj-n.forge")
+		return
 	}
 
 	if err := update.PerformUpdate(newVersion, exePath); err != nil {
