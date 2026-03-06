@@ -16,7 +16,7 @@ builds:
       - -s -w -X forge/cmd/forge.Version={{.Version}}
 
 archives:
-  - format: tar.gz
+  - format: binary
     name_template: "{{ .ProjectName }}"
 
 checksum:
