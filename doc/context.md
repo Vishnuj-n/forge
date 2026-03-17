@@ -3,8 +3,8 @@
 Forge is a Windows-only CLI tool that bootstraps projects from declarative templates.
 
 Key points:
-- Runs template commands inside a temporary workspace (safe, isolated)
-- Uses a two-phase commit: prepare in temp, then commit to target only on success
+- `forge init` runs commands directly in the target directory
+- `forge test` runs in a temporary workspace and does not commit
 - Non-interactive by default; enable interactive commands with `--interactive`
 - Templates are YAML; authors declare all test behavior (no guessing)
 
@@ -31,12 +31,21 @@ If a request conflicts with these rules, **do not implement it**.
 
 ## Execution Phases (FIXED ORDER)
 
+### `forge init` flow
+
+1. Validate template and target directory
+2. Create target directory if needed
+3. Run commands in target directory
+4. Copy template files (`files/`)
+5. Apply append-only patches (`patches/`)
+
+### `forge test` flow
+
 1. Create temp workspace
-2. Run commands
+2. Run commands in temp (test mode)
 3. Copy template files (`files/`)
 4. Apply append-only patches (`patches/`)
-5. Optional inspection (`forge test`)
-6. Commit to user directory
+5. Print workspace path for inspection (no commit)
 
 Order is not configurable.
 
@@ -65,8 +74,9 @@ template/
 
   * Default
   * Non-interactive
-  * Runs full workflow
-  * Commits automatically
+  * Runs directly in target directory
+  * No temporary workspace
+  * No commit phase
 
 * `forge test <template>`
 

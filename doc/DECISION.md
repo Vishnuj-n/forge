@@ -9,7 +9,7 @@ This file records major technical and process decisions for the Forge CLI projec
 - Interactive commands (e.g., `npm init`) work natively.
 - Partial state is allowed for `forge init` (like native tools).
 - `forge test` uses a temporary workspace, never prompts, and uses `test_cmd` or skips interactive steps.
-- Two-phase commit is only for `forge test`.
+- There is no commit phase in `forge test`; it keeps output in temp for inspection.
 
 ## 2026-02-06: Template Metadata
 - Templates support `description` and `version` fields in `template.yaml`.

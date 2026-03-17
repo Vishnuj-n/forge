@@ -14,7 +14,7 @@ Keep docs concise and actionable; link to the detailed architecture doc for desi
   - **Tone:** Welcoming, clear instructions
 
 - [x] **CHANGELOG.md**
-  - **Brief:** Version history and changes. Start with v0.1.0 (initial release) covering: core features implemented (init/test commands, template system, workspace isolation, two-phase commit), and note that this is the initial implementation based on the design plan
+  - **Brief:** Version history and changes. Start with v0.1.0 (initial release) covering: core features implemented (init/test commands, template system, test workspace isolation), and note that this is the initial implementation based on the design plan
   - **Target Audience:** Users tracking versions
   - **Format:** Standard keepachangelog.com format
   - **Tone:** Factual, organized by version
@@ -27,14 +27,14 @@ Keep docs concise and actionable; link to the detailed architecture doc for desi
 - **Project Name:** Forge
 - **Purpose:** Safety-first Windows CLI tool for project bootstrapping
 - **Language:** Go
-- **Key Feature:** Transactional workspace with two-phase commit
+- **Key Feature:** Dual execution model: direct init + isolated test
 - **Philosophy:** Safety over convenience, deterministic execution
 
 ### Key Implementation Details
 - Commands: `forge init <template>` and `forge test <template>`
 - Flag: `--interactive` / `-i` for interactive mode
 - Template format: YAML with commands (token arrays), files.copy, files.append
-- Execution: Temp workspace → Execute commands → Apply files → Commit
+- Execution: `forge init` runs in target; `forge test` runs in temp without commit
 - Safety: Cross-volume detection, append-only patches, fail-fast errors
 
 ### Source Files to Reference
@@ -43,7 +43,7 @@ Keep docs concise and actionable; link to the detailed architecture doc for desi
 - `internal/workspace/workspace.go` - Workspace management
 - `internal/executor/executor.go` - Command execution
 - `internal/fileops/fileops.go` - File operations
-- `internal/commit/commit.go` - Two-phase commit
+- `internal/commit/commit.go` - Commit/finalization utilities
 - `plan.md` - Complete design philosophy
 - `example.yaml` - Template example
 

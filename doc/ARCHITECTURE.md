@@ -4,14 +4,18 @@ This document provides a technical overview of Forge's internal design, module r
 
 ## 🏗️ System Design Overview
 
-Forge is a **transactional, workflow-aware project bootstrapper**. It allows users to create projects using declarative templates that mix ecosystem-native commands (like `npm init` or `git init`) with file operations, all within a safe, isolated environment.
+Forge is a **workflow-aware project bootstrapper**. It allows users to create projects using declarative templates that mix ecosystem-native commands (like `npm init` or `git init`) with file operations.
+
+Forge has two execution modes:
+- `forge init`: executes directly in the target directory.
+- `forge test`: executes in an isolated temporary workspace and does not commit.
 
 ### Core Design Principles
 
-1.  **Safety by Design:** All operations occur in a temporary workspace. User data is never modified until all steps succeed.
+1.  **Mode-Aware Safety:** `forge test` is fully isolated in temp; `forge init` writes directly to the target directory after validation.
 2.  **Deterministic Execution:** Templates are declarative (YAML) and sequential. There is no hidden logic or "magic".
-3.  **Two-Phase Commit:** The "prepare" phase happens in a temp directory. The "commit" phase moves the result to the target directory.
-4.  **Windows Atomicity:** Forge is designed with Windows filesystem constraints in mind, detecting cross-volume operations and handling them safely.
+3.  **Fail-Fast Behavior:** Command errors stop execution immediately.
+4.  **Windows-First:** Forge is designed with Windows filesystem behavior in mind.
 
 ---
 
@@ -38,15 +42,17 @@ Forge is organized into distinct modules, each with a single responsibility.
 -   **Role:** Manages the temporary execution environment.
 -   **Key Components:** `workspace.go`
 -   **Responsibility:**
-    -   Creates a secure temporary directory for execution.
-    -   Ensures isolation from the host system.
-    -   Cleans up resources after execution (or failure).
+    -   Creates a secure temporary directory for `forge test` execution.
+    -   Ensures isolation from the host system during testing.
+    -   Exposes workspace path for inspection after `forge test`.
 
 ### 4. Executor Module (`internal/executor/`)
 -   **Role:** Runs external commands defined in the template.
 -   **Key Components:** `executor.go`
 -   **Responsibility:**
-    -   Executes commands (e.g., `git`, `npm`) within the workspace context.
+    -   Executes commands (e.g., `git`, `npm`) in the provided working directory.
+        -   In `forge init`: target directory.
+        -   In `forge test`: temporary workspace.
     -   Handles `stdin`/`stdout` streams (suppressed by default, attached in `--interactive` mode).
     -   Enforces "fail-fast" behavior on command errors.
     -   Supports a *test mode* that replaces or skips interactive commands: `test_cmd` is used when present; otherwise interactive steps are skipped with a clear log message.
@@ -55,15 +61,15 @@ Forge is organized into distinct modules, each with a single responsibility.
 -   **Role:** Handles file copying and patching.
 -   **Key Components:** `fileops.go`
 -   **Responsibility:**
-    -   **Copy:** recursively copies files from the template `files/` directory to the workspace.
+    -   **Copy:** recursively copies files from the template `files/` directory to the active working directory.
     -   **Append:** applies append-only patches from `patches/` to existing files.
     -   **Verify:** ensures targets for patches exist.
 
 ### 6. Commit Module (`internal/commit/`)
--   **Role:** Finalizes the transaction.
+-   **Role:** Provides commit/finalization utilities.
 -   **Key Components:** `commit.go`
 -   **Responsibility:**
-    -   Moves the contents of the temporary workspace to the final user destination.
+    -   Moves prepared workspace contents to a final destination when used.
     -   **Safety Check:** Detects if the temp dir and target dir are on different volumes.
         -   **Atomic Move:** Uses `MoveFileEx` where possible, or falls back to a safe copy-and-delete strategy with rollback capabilities if a move isn't possible.
 
@@ -79,44 +85,66 @@ Forge is organized into distinct modules, each with a single responsibility.
 
 ## 🔄 Execution Flow
 
-When a user runs `forge init <template> <target>`, the following sequence occurs:
+Forge currently has two concrete execution flows.
+
+### Flow A: `forge init <template> [target]` (direct execution)
+
+1.  **Validation:**
+    -   CLI validates arguments.
+    -   Target directory is validated (must not be a non-empty directory).
+    -   Template loader resolves and parses `template.yaml`.
+
+2.  **Target Preparation:**
+    -   Target directory is created if it does not exist.
+
+3.  **Command Execution (in target):**
+    -   Commands defined in `template.yaml` are executed sequentially in the target directory.
+    -   If any command fails (non-zero exit code), the process aborts immediately.
+
+4.  **File Operations (in target):**
+    -   **Copy:** Files from `template/files/` are copied to the target.
+    -   **Append:** Content from `template/patches/` is appended to target files.
+
+5.  **Completion:**
+    -   Success is reported.
+    -   No temporary workspace or commit phase is used in this flow.
+
+### Flow B: `forge test <template>` (temporary workspace)
 
 1.  **Validation:**
     -   CLI validates arguments.
     -   Template loader finds and parses `template.yaml`.
 
-2.  **Workspace Creation (Phase 1 Start):**
+2.  **Workspace Creation:**
     -   A temporary directory is created (e.g., `%TEMP%\forge-xxxx`).
 
 3.  **Command Execution:**
     -   Commands defined in `template.yaml` are executed sequentially in the temp workspace.
-    -   If any command fails (non-zero exit code), the process aborts, and the temp dir is cleaned up.
+    -   Interactive commands are replaced by `test_cmd` or skipped.
+    -   If any command fails (non-zero exit code), the process aborts.
 
 4.  **File Operations:**
     -   **Copy:** Files from `template/files/` are copied over the workspace.
     -   **Patch:** Content from `template/patches/` is appended to target files in the workspace.
 
-5.  **Commit (Phase 2):**
-    -   If all previous steps succeed, the Commit module takes over.
-    -   It verifies the target directory doesn't already exist (or is empty).
-    -   It moves the workspace content to the target path.
-
-6.  **Cleanup:**
-    -   The temporary directory wrapper is removed.
+5.  **Inspection Output:**
+    -   Workspace path is printed for manual inspection.
+    -   No commit to user target is performed.
 
 ---
 
 ## 🛡️ Safety Model
 
-### Workspace Isolation
-By running everything in `%TEMP%`, we ensure that:
--   Partial failures don't leave "half-baked" projects in your working directory.
--   Scripts inside templates cannot accidentally delete or modify your actual files during the generation phase.
+### `forge test` Isolation
+By running `forge test` in `%TEMP%`, Forge ensures:
+-   Partial failures don't affect project directories.
+-   Results can be inspected safely before real initialization.
 
-### Two-Phase Commit
-Forge separates **Generation** (Phase 1) from **Commit** (Phase 2).
--   **Generation:** Can fail at any point without side effects.
--   **Commit:** Is the only point where the user's filesystem is permanently altered.
+### `forge init` Direct-Write Safety
+`forge init` writes directly to the target directory after validation.
+-   Target directory must be empty (or not exist).
+-   Execution is fail-fast.
+-   There is no automatic rollback of partially written output.
 
 ### Append-Only Patching
 Forge intentionally limits file modifications to **append-only**.

@@ -45,13 +45,13 @@ This package contains the CLI command definitions using the Cobra library.
 **Functions**:
 - `init()`: Registers the `init` command with the root command.
 - `runInit(cmd *cobra.Command, args []string)`:
+    - Resolves the target directory and validates it is empty (or does not exist).
     - Resolves the template path or name.
-    - Creates a temporary workspace (`internal/workspace`).
     - Loads the template configuration (`internal/template`).
-    - Executes the template's commands in the workspace (`internal/executor`).
+    - Creates the target directory if needed.
+    - Executes the template's commands directly in the target directory (`internal/executor`).
     - Applies file operations (copy/patch) (`internal/fileops`).
-    - Commits the workspace to the final destination (`internal/commit`).
-    - Cleans up the workspace on success or failure.
+    - Reports completion without a commit phase.
 
 ### `cmd/forge/install.go`
 **Purpose**: Implements the `forge install` command, which installs the Forge binary to a location in the user's PATH (or system-wide).
@@ -136,7 +136,7 @@ These packages contain the core logic of the application, separated by concern.
 ### `internal/commit`
 
 #### `commit.go`
-**Purpose**: Handles the "commit" phase of the transaction. It moves or copies the contents of the temporary workspace to the final user-specified destination.
+**Purpose**: Provides commit/finalization helpers that move or copy prepared workspace contents to a destination when that flow is used.
 
 **Functions**:
 - `Commit(workspacePath, targetPath string) error`:
@@ -158,7 +158,9 @@ These packages contain the core logic of the application, separated by concern.
 **Functions**:
 - `New(workDir string, interactive bool, testMode bool) *Executor`: Creates a new Executor instance.
 - `Run(cmd template.Command) error`:
-    - Executes a command in the context of the workspace.
+    - Executes a command in the configured working directory.
+    - In `forge init`, workDir is the user target directory.
+    - In `forge test`, workDir is a temporary workspace.
     - Handles "Test Mode": If running `forge test`, it skips interactive commands or uses `test_cmd`.
     - Handles I/O: In normal mode, connects stdin/out/err to the user's terminal. In test mode, captures output to buffers.
 
@@ -235,7 +237,7 @@ These packages contain the core logic of the application, separated by concern.
 ### `internal/workspace`
 
 #### `workspace.go`
-**Purpose**: Manages the temporary directory where the project is assembled before being committed.
+**Purpose**: Manages temporary directories used by `forge test`.
 
 **Functions**:
 - `New() (*Workspace, error)`: Creates a new temporary directory with a unique name.
